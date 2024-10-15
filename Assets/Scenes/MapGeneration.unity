@@ -617,13 +617,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b864f20618faf744e92b914429080838, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  NodePrefab: {fileID: 8785671950155818997, guid: 8f49717adaa420a43b10d51dd0aceb18, type: 3}
+  PathPrefab: {fileID: 3513680801794347135, guid: b800d8f9ff2fd5b4d92a4fa3b104a2ad, type: 3}
   GroundLayer:
     serializedVersion: 2
     m_Bits: 8
   GraphLayer:
     serializedVersion: 2
     m_Bits: 64
-  NodePrefab: {fileID: 8785671950155818997, guid: 8f49717adaa420a43b10d51dd0aceb18, type: 3}
 --- !u!4 &1504210314
 Transform:
   m_ObjectHideFlags: 0

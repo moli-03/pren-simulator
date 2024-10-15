@@ -1,44 +1,46 @@
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Map : MonoBehaviour
 {
-    private List<Node> Nodes = new List<Node>();
-    private List<(Node, Node)> Connections = new List<(Node, Node)>();
-    private List<GameObject> ConnectionInstances = new List<GameObject>();
-    private Camera MainCamera;
+    // Assign in editor
+    public GameObject NodePrefab;
+    public GameObject PathPrefab;
     public LayerMask GroundLayer;
     public LayerMask GraphLayer;
-    public GameObject NodePrefab;
 
-    private GameObject DraggingTarget;
-    private Vector3 DraggingOffset;
-    private bool IsDragging = false;
+    private Camera MainCamera;
+
+    private List<Node> Nodes = new List<Node>();
+    private List<Path> Paths = new List<Path>();
+
+    struct DragInfo
+    {
+        public Node Target;
+        public bool IsDragging;
+    }
+
+    private DragInfo? CurrentDrag = null;
 
     // Start is called before the first frame update
     void Start()
     {
         this.MainCamera = Camera.main;
 
-        Node A = Instantiate(NodePrefab, new Vector3(1.5f, 0, 0), Quaternion.identity).GetComponent<Node>();
-        A.transform.Find("Canvas/Letter").GetComponent<TMP_Text>().text = "A";
-        Node B = Instantiate(NodePrefab, new Vector3(0, 0, 0.5f), Quaternion.identity).GetComponent<Node>();
-        B.transform.Find("Canvas/Letter").GetComponent<TMP_Text>().text = "B";
-        Node C = Instantiate(NodePrefab, new Vector3(3, 0, 0.5f), Quaternion.identity).GetComponent<Node>();
-        C.transform.Find("Canvas/Letter").GetComponent<TMP_Text>().text = "C";
-        Node D = Instantiate(NodePrefab, new Vector3(1f, 0, 1f), Quaternion.identity).GetComponent<Node>();
-        D.transform.Find("Canvas/Letter").GetComponent<TMP_Text>().text = "D";
-        Node E = Instantiate(NodePrefab, new Vector3(0, 0, 1.5f), Quaternion.identity).GetComponent<Node>();
-        E.transform.Find("Canvas/Letter").GetComponent<TMP_Text>().text = "E";
-        Node F = Instantiate(NodePrefab, new Vector3(1f, 0, 1.5f), Quaternion.identity).GetComponent<Node>();
-        F.transform.Find("Canvas/Letter").GetComponent<TMP_Text>().text = "F";
-        Node G = Instantiate(NodePrefab, new Vector3(3f, 0, 1.5f), Quaternion.identity).GetComponent<Node>();
-        G.transform.Find("Canvas/Letter").GetComponent<TMP_Text>().text = "G";
-        Node H = Instantiate(NodePrefab, new Vector3(1.5f, 0, 2f), Quaternion.identity).GetComponent<Node>();
-        H.transform.Find("Canvas/Letter").GetComponent<TMP_Text>().text = "H";
+        // Create all node instances on their default positions
+        Node A = Instantiate(NodePrefab, new Vector3(1.5f, 0, 0), Quaternion.identity).GetComponent<Node>().SetLabel("A");
+        Node B = Instantiate(NodePrefab, new Vector3(0, 0, 0.5f), Quaternion.identity).GetComponent<Node>().SetLabel("B");
+        Node C = Instantiate(NodePrefab, new Vector3(3, 0, 0.5f), Quaternion.identity).GetComponent<Node>().SetLabel("C");
+        Node D = Instantiate(NodePrefab, new Vector3(1f, 0, 1f), Quaternion.identity).GetComponent<Node>().SetLabel("D");
+        Node E = Instantiate(NodePrefab, new Vector3(0, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("E");
+        Node F = Instantiate(NodePrefab, new Vector3(1f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("F");
+        Node G = Instantiate(NodePrefab, new Vector3(3f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("G");
+        Node H = Instantiate(NodePrefab, new Vector3(1.5f, 0, 2f), Quaternion.identity).GetComponent<Node>().SetLabel("H");
 
+        // Add to node list
         this.Nodes.Add(A);
         this.Nodes.Add(B);
         this.Nodes.Add(C);
@@ -48,37 +50,39 @@ public class Map : MonoBehaviour
         this.Nodes.Add(G);
         this.Nodes.Add(H);
 
+        // Add the default connections
         // From A
-        this.Connections.Add((A, B));
-        this.Connections.Add((A, C));
-        this.Connections.Add((A, D));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(A).To(B));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(A).To(B));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(A).To(C));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(A).To(D));
 
         // From B
-        this.Connections.Add((B, D));
-        this.Connections.Add((B, E));
-        this.Connections.Add((B, F));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(B).To(D));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(B).To(E));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(B).To(F));
 
         // From C
-        this.Connections.Add((C, D));
-        this.Connections.Add((C, G));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(C).To(D));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(C).To(G));
 
         // From D
-        this.Connections.Add((D, G));
-        this.Connections.Add((D, F));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(D).To(G));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(D).To(F));
 
         // From E
-        this.Connections.Add((E, F));
-        this.Connections.Add((E, H));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(E).To(F));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(E).To(H));
 
         // From F
-        this.Connections.Add((F, G));
-        this.Connections.Add((F, H));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(F).To(G));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(F).To(H));
 
         // From G
-        this.Connections.Add((G, H));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(G).To(H));
 
-        // Initial draw
-        this.DrawConnections();
+        // Update the positions for each path
+        this.Paths.ForEach(path => path.UpdatePosition());
     }
 
     // Update is called once per frame
@@ -89,79 +93,66 @@ public class Map : MonoBehaviour
         {
             if (Physics.Raycast(this.MainCamera.ScreenPointToRay(Input.mousePosition), out RaycastHit initialHit, Mathf.Infinity, this.GraphLayer))
             {
+                // Mark as selected
                 initialHit.collider.GetComponent<Renderer>().material.color = Color.cyan;
-                this.DraggingTarget = initialHit.collider.gameObject;
-                this.DraggingOffset.y = 0;
-                this.IsDragging = true;
+
+                // Store drag info
+                this.CurrentDrag = new DragInfo()
+                {
+                    Target = initialHit.collider.gameObject.GetComponent<Node>(),
+                    IsDragging = true
+                };
             }
         }
 
-        if (Input.GetMouseButtonUp(0) && IsDragging)
+
+        // Handle logic for dragging
+        if (this.CurrentDrag.HasValue && this.CurrentDrag.Value.IsDragging)
         {
-            this.DraggingTarget.GetComponent<Renderer>().material.color = Color.white;
-            this.IsDragging = false;
-            this.DraggingTarget = null;
-            this.DraggingOffset = Vector3.zero;
-        }
-
-        if (IsDragging && Physics.Raycast(this.MainCamera.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, Mathf.Infinity, this.GroundLayer))
-        {
-            // Get the new position of the point
-            Vector3 newPosition = new Vector3(hit.point.x, this.DraggingTarget.transform.position.y, hit.point.z);
-
-            // Check if its in the 0.5m - 2m range
-            List<(Node, Node)> relevantConnections = this.Connections.Where(connection => connection.Item1 == this.DraggingTarget || connection.Item2 == this.DraggingTarget).ToList();
-
-            bool hasInvalidConnections = this.Connections.Any(connection =>
+            // Check for mouse release
+            if (Input.GetMouseButtonUp(0))
             {
-                Node target = connection.Item1 == this.DraggingTarget ? connection.Item2 : connection.Item1;
-                Vector3 distance = target.transform.position - newPosition;
-                Debug.Log(distance + ", Magnitude: " + distance.magnitude);
-                return distance.magnitude < 0.5f || distance.magnitude > 2f;
-            });
-
-            if (!hasInvalidConnections || true)
+                // Back to white again
+                this.CurrentDrag.Value.Target.GetComponent<Renderer>().material.color = Color.white;
+                this.CurrentDrag = null;
+                this.Paths.ForEach(path => path.Line.GetComponent<Renderer>().material.color = Color.white);
+            }
+            // Not released yet -> update position
+            else if (Physics.Raycast(this.MainCamera.ScreenPointToRay(Input.mousePosition), out RaycastHit hit, Mathf.Infinity, this.GroundLayer))
             {
-                this.DraggingTarget.transform.position = newPosition;
-                this.WipeConnections();
-                this.DrawConnections();
+                // Get the new position based on the raycasthit
+                Vector3 newPosition = new Vector3(hit.point.x, this.CurrentDrag.Value.Target.transform.position.y, hit.point.z);
+                
+                // Get a list of all affected paths
+                List<Path> affectedPaths = this.Paths.Where(path => path.StartNode == this.CurrentDrag.Value.Target || path.EndNode == this.CurrentDrag.Value.Target).ToList();
+
+                // Check if all paths are still in the 0.5m - 2m range
+                bool hasInvalidPaths = affectedPaths.Any(path =>
+                {
+                    // Get the other node
+                    Node target = path.StartNode == this.CurrentDrag.Value.Target ? path.EndNode : path.StartNode;
+
+                    // Calculate the new distance
+                    Vector3 distance = target.transform.position - newPosition;
+
+                    // Check range
+                    bool invalidDistance = distance.magnitude < 0.5f || distance.magnitude > 2f;
+
+                    // Update material color if its correct size or nah
+                    path.Line.GetComponent<Renderer>().material.color = invalidDistance ? Color.red : Color.green;
+
+                    return invalidDistance;
+                });
+
+                // No invalid paths? -> update position of the node
+                if (!hasInvalidPaths)
+                {
+                    this.CurrentDrag.Value.Target.transform.position = newPosition;
+
+                    // Update all related paths
+                    affectedPaths.ForEach(path => path.UpdatePosition());
+                }
             }
         }
-    }
-
-    void WipeConnections()
-    {
-        this.ConnectionInstances.ForEach(instance => Destroy(instance));
-    }
-
-    void DrawConnections()
-    {
-
-        // Draw the connections
-        this.Connections.ForEach(connection =>
-        {
-            // Create the plane
-            GameObject plane = GameObject.CreatePrimitive(PrimitiveType.Cube);
-
-            // Calcualte the vector between the nodes
-            Vector3 connectionVector = connection.Item2.transform.position - connection.Item1.transform.position;
-
-            // Apply the scale based on the calculated vector
-            plane.transform.localScale = new Vector3(connectionVector.magnitude, 0.001f, 0.03f);
-
-            // Start from Node 1
-            plane.transform.localPosition = connection.Item1.transform.position + 0.5f * connectionVector;
-
-            // Calculate the angle on the Y-axis using Atan2 (XZ plane)
-            float angle = Mathf.Atan2(connectionVector.z, connectionVector.x) * Mathf.Rad2Deg;
-
-            // Create a new rotation based on that angle (rotation around Y-axis)
-            Quaternion rotation = Quaternion.Euler(0, -angle, 0);
-
-            // Set rotation
-            plane.transform.localRotation = rotation;
-
-            this.ConnectionInstances.Add(plane);
-        });
     }
 }
