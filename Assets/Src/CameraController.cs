@@ -6,7 +6,8 @@ public class CameraController : MonoBehaviour
 {
     public float moveSpeed = 6.0f;  // Speed at which the camera moves
     public float sensitivity = 4.0f; // Mouse sensitivity for looking around
-    private float rotationY = 0.0f;  // Store the vertical rotatio
+    private float rotationY = 0.0f;  // Store the vertical rotation
+	private Dictionary<int, RaycastHit?> currentRaycastHits = new Dictionary<int, RaycastHit?>();
 
     private void Start()
     {
@@ -15,12 +16,55 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
+		// Reset all current raycast hits
+		this.currentRaycastHits.Clear();
+
         // Handle keyboard movement
         MoveCamera();
 
         // Handle mouse look
         LookAround();
     }
+
+
+	/// <summary>
+	/// Performs a raycast with the main camera and returns the result
+	/// </summary>
+	/// <returns></returns>
+	public RaycastHit? GetRaycastHit() {
+		if (this.currentRaycastHits.ContainsKey(-1)) {
+			return this.currentRaycastHits[-1];
+		}
+	
+        if (!Physics.Raycast(this.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition), out RaycastHit hit)) {
+			this.currentRaycastHits[-1] = null;
+			return null;
+		}
+
+		this.currentRaycastHits[-1] = hit;
+		return hit;
+	}
+
+
+	/// <summary>
+	/// Returns the current raycast hit on a layer
+	/// </summary>
+	/// <param name="layer"></param>
+	/// <returns></returns>
+	public RaycastHit? GetRaycastHit(LayerMask layer) {
+		if (this.currentRaycastHits.ContainsKey(layer.value)) {
+			return this.currentRaycastHits[layer.value];
+		}
+	
+        if (!Physics.Raycast(this.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition), out RaycastHit hit, Mathf.Infinity, layer)) {
+			this.currentRaycastHits[-1] = null;
+			return null;
+		}
+
+		this.currentRaycastHits[layer.value] = hit;
+		return hit;
+	}
+
 
     private void MoveCamera()
     {
