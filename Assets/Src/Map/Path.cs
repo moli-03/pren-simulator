@@ -5,10 +5,17 @@ public class Path : MonoBehaviour
 {
     public Node StartNode { get; private set; } = null;
     public Node EndNode { get; private set; } = null;
+	private CameraController cameraController;
+	private Map map;
 
     public GameObject Line;
 
     public TMP_Text Label;
+
+	public Path SetMap(Map map) {
+		this.map = map;
+		return this;
+	}
 
     public Path From(Node node)
     {
@@ -46,6 +53,21 @@ public class Path : MonoBehaviour
         this.SetLabel(connectionVector.magnitude.ToString("F2") + "m");
     }
 
+	void Start() {
+		this.cameraController = Camera.main.GetComponent<CameraController>();
+		this.Line = this.transform.Find("Line").gameObject;
+	}
+
+	void Update() {
+
+		if (Input.GetKeyDown(KeyCode.Delete)) {
+			RaycastHit? hit = this.cameraController.GetRaycastHit();
+			if (hit.HasValue && hit.Value.collider.gameObject == this.Line) {
+				this.map.RemovePath(this);
+			}
+		}
+
+	}
 
     public void SetLabel(string label)
     {

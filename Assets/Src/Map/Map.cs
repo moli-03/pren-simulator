@@ -52,34 +52,34 @@ public class Map : MonoBehaviour
 
         // Add the default connections
         // From A
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(A).To(B));
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(A).To(B));
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(A).To(C));
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(A).To(D));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(A).To(B));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(A).To(B));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(A).To(C));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(A).To(D));
 
         // From B
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(B).To(D));
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(B).To(E));
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(B).To(F));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(B).To(D));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(B).To(E));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(B).To(F));
 
         // From C
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(C).To(D));
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(C).To(G));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(C).To(D));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(C).To(G));
 
         // From D
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(D).To(G));
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(D).To(F));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(D).To(G));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(D).To(F));
 
         // From E
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(E).To(F));
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(E).To(H));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(E).To(F));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(E).To(H));
 
         // From F
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(F).To(G));
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(F).To(H));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(F).To(G));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(F).To(H));
 
         // From G
-        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().From(G).To(H));
+        this.Paths.Add(Instantiate(this.PathPrefab).GetComponent<Path>().SetMap(this).From(G).To(H));
 
         // Update the positions for each path
         this.Paths.ForEach(path => path.UpdatePosition());
@@ -155,4 +155,9 @@ public class Map : MonoBehaviour
             }
         }
     }
+
+	public void RemovePath(Path path) {
+		this.Paths.Remove(path);
+		Destroy(path.gameObject);
+	}
 }

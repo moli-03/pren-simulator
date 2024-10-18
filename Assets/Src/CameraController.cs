@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class CameraController : MonoBehaviour
@@ -8,6 +9,7 @@ public class CameraController : MonoBehaviour
     public float sensitivity = 4.0f; // Mouse sensitivity for looking around
     private float rotationY = 0.0f;  // Store the vertical rotation
 	private Dictionary<int, RaycastHit?> currentRaycastHits = new Dictionary<int, RaycastHit?>();
+	private bool movementEnabled = true;
 
     private void Start()
     {
@@ -20,11 +22,22 @@ public class CameraController : MonoBehaviour
 		this.currentRaycastHits.Clear();
 
         // Handle keyboard movement
-        MoveCamera();
+		if (this.movementEnabled) {
+        	MoveCamera();
+		}
 
         // Handle mouse look
         LookAround();
     }
+
+
+	public void DisableMovement() {
+		this.movementEnabled = false;
+	}
+
+	public void EnableMovement() {
+		this.movementEnabled = true;
+	}
 
 
 	/// <summary>
@@ -55,9 +68,9 @@ public class CameraController : MonoBehaviour
 		if (this.currentRaycastHits.ContainsKey(layer.value)) {
 			return this.currentRaycastHits[layer.value];
 		}
-	
+
         if (!Physics.Raycast(this.GetComponent<Camera>().ScreenPointToRay(Input.mousePosition), out RaycastHit hit, Mathf.Infinity, layer)) {
-			this.currentRaycastHits[-1] = null;
+			this.currentRaycastHits[layer.value] = null;
 			return null;
 		}
 
