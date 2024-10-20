@@ -12,6 +12,27 @@ public class Path : MonoBehaviour
 
     public TMP_Text Label;
 
+	private GameObject? Barrier;
+
+	public Path SetBarrier(GameObject barrier) {
+		this.Barrier = barrier;
+		this.map.TriggerMapChange();
+		return this;
+	}
+
+	public bool HasBarrier() {
+		return this.Barrier != null;
+	}
+
+	public Path SetColor(Color color) {
+		this.Line.GetComponent<Renderer>().material.color = color;
+		return this;
+	}
+	
+	public Color GetColor() {
+		return this.Line.GetComponent<Renderer>().material.color;
+	}
+
 	public Path SetMap(Map map) {
 		this.map = map;
 		return this;

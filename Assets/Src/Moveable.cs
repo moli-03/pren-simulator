@@ -11,12 +11,16 @@ public class Moveable : MonoBehaviour
 	private float RotationSpeed = 100f;
 
 	private LayerMask GroundLayer;
+	private LayerMask GraphLayer;
+	private int Mask;
 
     // Start is called before the first frame update
     void Start()
     {
         this.cameraController = Camera.main.GetComponent<CameraController>();
-		this.GroundLayer = 1 << LayerMask.NameToLayer("Ground");
+		this.GroundLayer = LayerMask.NameToLayer("Ground");
+		this.GraphLayer = LayerMask.NameToLayer("Graph");
+		this.Mask = (1 << this.GroundLayer) | (1 << this.GraphLayer);
     }
 
     // Update is called once per frame
@@ -38,9 +42,29 @@ public class Moveable : MonoBehaviour
 		}
 		// Handle dragging
 		else if (this.IsSelected) {
-			RaycastHit? currentHit = this.cameraController.GetRaycastHit(this.GroundLayer);
+			RaycastHit? currentHit = this.cameraController.GetRaycastHit(this.Mask);
+
+			// Hit anything?
 			if (currentHit.HasValue) {
-				this.transform.position = new Vector3(currentHit.Value.point.x, this.transform.position.y, currentHit.Value.point.z);
+
+				// Check if we hit the graph
+				if (currentHit.Value.collider.gameObject.layer == this.GraphLayer.value) {
+
+					// Check node hit
+					if (currentHit.Value.collider.gameObject.name.StartsWith("Node") && this.name.StartsWith("Cone")) {
+						Node node = currentHit.Value.collider.GetComponent<Node>();
+						node.SetCone(this.gameObject);
+					} 
+					// Check path hit
+					else if (currentHit.Value.collider.transform.parent.name.StartsWith("Path") && this.name.StartsWith("Barrier")) {
+						Path path = currentHit.Value.collider.GetComponentInParent<Path>();
+						path.SetBarrier(this.gameObject);
+					}
+				}
+				else {
+					// Ground it -> update position
+					this.transform.position = new Vector3(currentHit.Value.point.x, this.transform.position.y, currentHit.Value.point.z);
+				}
 			}
 		}
 
@@ -51,6 +75,7 @@ public class Moveable : MonoBehaviour
 			this.cameraController.DisableMovement();
 		}
 
+		// Handle rotation
 		if (this.Rotate) {
 			if (Input.GetKey(KeyCode.A)) {
 				this.transform.Rotate(new Vector3(0, 0, this.RotationSpeed * Time.deltaTime));

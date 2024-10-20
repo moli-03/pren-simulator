@@ -1363,6 +1363,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1504210314}
   - component: {fileID: 1504210313}
+  - component: {fileID: 1504210315}
   m_Layer: 0
   m_Name: Map
   m_TagString: Untagged
@@ -1390,6 +1391,7 @@ MonoBehaviour:
   GraphLayer:
     serializedVersion: 2
     m_Bits: 64
+  Nodes: []
 --- !u!4 &1504210314
 Transform:
   m_ObjectHideFlags: 0
@@ -1416,6 +1418,18 @@ Transform:
   - {fileID: 150037255}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1504210315
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1504210312}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 71c6741df938b814196d13e3a9a16c91, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1785375180 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: ac3764cf3bc84304f9ded0359922cd0c, type: 3}
