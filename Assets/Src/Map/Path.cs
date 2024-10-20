@@ -33,6 +33,11 @@ public class Path : MonoBehaviour
 		return this.Line.GetComponent<Renderer>().material.color;
 	}
 
+
+	public float GetLength() {
+		return this.transform.localScale.x;
+	}
+
 	public Path SetMap(Map map) {
 		this.map = map;
 		return this;

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Pathing : MonoBehaviour
@@ -11,6 +12,20 @@ public class Pathing : MonoBehaviour
 	private Node EndNode;
 
 	private Color PathColor = Color.magenta;
+
+	public struct PathInfo {
+		public List<Node> Nodes;
+		public float Length;
+		public int BarrierCount;
+
+		public PathInfo Clone() {
+			return new PathInfo {
+				Nodes = new List<Node>(Nodes),
+				Length = this.Length,
+				BarrierCount = this.BarrierCount
+			};
+		}
+	}
 
     // Start is called before the first frame update
     void Start()
@@ -38,49 +53,77 @@ public class Pathing : MonoBehaviour
 			}
 		}
 
-		// Show new colors
-		for (int i = 0; i < optimalPath.Count; i++) {
-			optimalPath[i].SetColor(this.PathColor);
-			// Color path to next node
-			if (i < optimalPath.Count - 1) {
-				this.map.PathMatrix[optimalPath[i].Index, optimalPath[i + 1].Index].SetColor(this.PathColor);
+		if (optimalPath.HasValue) {
+			// Show new colors
+			for (int i = 0; i < optimalPath.Value.Nodes.Count; i++) {
+				optimalPath.Value.Nodes[i].SetColor(this.PathColor);
+				// Color path to next node
+				if (i < optimalPath.Value.Nodes.Count - 1) {
+					this.map.PathMatrix[optimalPath.Value.Nodes[i].Index, optimalPath.Value.Nodes[i + 1].Index].SetColor(this.PathColor);
+				}
 			}
 		}
 	}
 
 	
-	public List<Node>? GetOptimalPath() {
-		List<List<Node>> allPaths = new List<List<Node>>();
-		List<Node> currentPath = new List<Node>();
+	public PathInfo? GetOptimalPath() {
+		List<PathInfo> allPaths = new List<PathInfo>();
+		PathInfo currentPath = new PathInfo() {
+			Nodes = new List<Node>(),
+			BarrierCount = 0,
+			Length = 0f
+		};
 		bool[] visitedNodes = new bool[Map.NODE_COUNT];
 
 		FindAllPaths(this.StartNode, this.EndNode, visitedNodes, currentPath, allPaths);
 
-		List<Node> optimalPath = null;
-		foreach (List<Node> potentialPath in allPaths) {
+		PathInfo? optimalPath = null;
+		foreach (PathInfo potentialPath in allPaths) {
 
 			// Check path length
-			if (potentialPath.Count < 4) {
+			if (potentialPath.Nodes.Count < 4) {
 				continue;
 			}
 
-			if (optimalPath == null || potentialPath.Count < optimalPath.Count) {
+			if (
+				// No optimal path found yet
+				!optimalPath.HasValue
+				||
+				// Path with less barriers
+				(potentialPath.BarrierCount < optimalPath.Value.BarrierCount)
+				||
+				// Path with same amount of barriers but shorter
+				(potentialPath.BarrierCount == optimalPath.Value.BarrierCount && potentialPath.Length < optimalPath.Value.Length)
+			) {
 				optimalPath = potentialPath;
 			}
 		}
 
+
+		Debug.Log(optimalPath);
+
 		return optimalPath;
 	}
 
-	private void FindAllPaths(Node current, Node end, bool[] visitedNodes, List<Node> currentPath, List<List<Node>> allPaths) {
+	private void FindAllPaths(Node current, Node end, bool[] visitedNodes, PathInfo currentPath, List<PathInfo> allPaths) {
+			  
         // Add current node to path
 		visitedNodes[current.Index] = true;
-        currentPath.Add(current);
+		currentPath.Nodes.Add(current);
+
+		if (currentPath.Nodes.Count > 1) {
+			Node previous = currentPath.Nodes[currentPath.Nodes.Count - 2];
+			Path path = this.map.PathMatrix[current.Index, previous.Index];
+			currentPath.Length += path.GetLength();
+			if (path.HasBarrier()) {
+				currentPath.BarrierCount++;
+			}
+		}
 
 		if (!current.HasCone()) {
         	// If reached the end node, save the current path
         	if (current == end) {
-            	allPaths.Add(new List<Node>(currentPath));
+            	allPaths.Add(currentPath.Clone());
         	}
         	else {
 				for (int i = 0; i < this.map.PathMatrix.GetLength(1); i++) {
@@ -95,7 +138,15 @@ public class Pathing : MonoBehaviour
 		}
 
         // Backtrack: remove the current node
+		if (currentPath.Nodes.Count > 1) {
+			Node previous = currentPath.Nodes[currentPath.Nodes.Count - 2];
+			Path path = this.map.PathMatrix[current.Index, previous.Index];
+			currentPath.Length -= path.GetLength();
+			if (path.HasBarrier()) {
+				currentPath.BarrierCount--;
+			}
+		}
 		visitedNodes[current.Index] = false;
-        currentPath.RemoveAt(currentPath.Count - 1);
+        currentPath.Nodes.RemoveAt(currentPath.Nodes.Count - 1);
     }
 }
