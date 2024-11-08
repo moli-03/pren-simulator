@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class Pathing : MonoBehaviour
 {
+	/*
 	private Map map;
 
 	private Node StartNode;
@@ -146,4 +147,5 @@ public class Pathing : MonoBehaviour
 		visitedNodes[current.Index] = false;
         currentPath.Nodes.RemoveAt(currentPath.Nodes.Count - 1);
     }
+	*/
 }

@@ -42,7 +42,6 @@ public class Map : MonoBehaviour
 
 
 	private void AddNode(Node node) {
-		node.SetMap(this);
 		this.Nodes.Add(node);
 		node.Index = this.Nodes.Count - 1;
 	}

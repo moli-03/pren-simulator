@@ -47,24 +47,8 @@ public class Moveable : MonoBehaviour
 			// Hit anything?
 			if (currentHit.HasValue) {
 
-				// Check if we hit the graph
-				if (currentHit.Value.collider.gameObject.layer == this.GraphLayer.value) {
-
-					// Check node hit
-					if (currentHit.Value.collider.gameObject.name.StartsWith("Node") && this.name.StartsWith("Cone")) {
-						Node node = currentHit.Value.collider.GetComponent<Node>();
-						node.SetCone(this.gameObject);
-					} 
-					// Check path hit
-					else if (currentHit.Value.collider.transform.parent.name.StartsWith("Path") && this.name.StartsWith("Barrier")) {
-						Path path = currentHit.Value.collider.GetComponentInParent<Path>();
-						path.SetBarrier(this.gameObject);
-					}
-				}
-				else {
-					// Ground it -> update position
-					this.transform.position = new Vector3(currentHit.Value.point.x, this.transform.position.y, currentHit.Value.point.z);
-				}
+				// Update position
+				this.transform.position = new Vector3(currentHit.Value.point.x, this.transform.position.y, currentHit.Value.point.z);
 			}
 		}
 
