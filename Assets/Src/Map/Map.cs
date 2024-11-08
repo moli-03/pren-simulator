@@ -7,6 +7,8 @@ public class Map : MonoBehaviour
     // Assign in editor
     public GameObject NodePrefab;
     public GameObject PathPrefab;
+	public GameObject BarrierPrefab;
+	public GameObject ConePrefab;
     public LayerMask GroundLayer;
     public LayerMask GraphLayer;
     private Camera MainCamera;

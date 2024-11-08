@@ -99,9 +99,6 @@ public class Pathing : MonoBehaviour
 			}
 		}
 
-
-		Debug.Log(optimalPath);
-
 		return optimalPath;
 	}
 
