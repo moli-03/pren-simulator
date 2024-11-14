@@ -1,16 +1,43 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class IRSensor : MonoBehaviour
 {
-    public float RayMaxDistance = 100f;    // Distance the laser will shoot
+    public float RayMaxDistance = 1f;    // Distance the laser will shoot
 
-    void Start()
-    {
+	private LineRenderer lineRenderer;
+	private bool drawDebugLine = false;
 
-    }
+	void Start() {
+		this.lineRenderer = this.gameObject.AddComponent<LineRenderer>();
+		this.lineRenderer.receiveShadows = false;
+		this.lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+		this.lineRenderer.useWorldSpace = true;
+        this.lineRenderer.startWidth = 0.008f;
+        this.lineRenderer.endWidth = 0.008f;
+        this.lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
+        this.lineRenderer.startColor = Color.red;
+        this.lineRenderer.endColor = Color.red;
+	}
 
+	public void DrawDebugLine() {
+		this.drawDebugLine = true;
+	}
+
+	public void RemoveDebugLine() {
+		this.drawDebugLine = false;
+	}
+
+	void Update() {
+
+		if (this.drawDebugLine) {
+        	Vector3 start = transform.position;
+			bool hitSomething = Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, RayMaxDistance);
+        	Vector3 end = hitSomething ? hit.point : transform.position + this.transform.forward * this.RayMaxDistance;
+        	lineRenderer.SetPosition(0, start);
+        	lineRenderer.SetPosition(1, end);
+		}
+
+	}
 
     public float GetReflectedLight()
     {
@@ -18,7 +45,7 @@ public class IRSensor : MonoBehaviour
         Vector3 origin = transform.position;
 
         // Define the direction of the ray, which is along the object's local Z-axis
-        Vector3 direction = transform.up;
+        Vector3 direction = transform.forward;
 
         if (!Physics.Raycast(origin, direction, out RaycastHit hit, RayMaxDistance))
         {

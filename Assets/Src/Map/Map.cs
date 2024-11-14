@@ -26,13 +26,6 @@ public class Map : MonoBehaviour
 
     private DragInfo? CurrentDrag = null;
 
-	public delegate void MapChanged();
-	public event MapChanged OnMapChanged;
-
-	public void TriggerMapChange() {
-		this.OnMapChanged?.Invoke();
-	}
-
 	private void AddPath(Node from, Node to) {
 		int fromIndex = from.Index;
 		int toIndex = to.Index;
@@ -119,8 +112,6 @@ public class Map : MonoBehaviour
 
 			path.UpdatePosition();
 		}
-
-		this.OnMapChanged?.Invoke();
     }
 
     // Update is called once per frame
@@ -212,6 +203,5 @@ public class Map : MonoBehaviour
 		this.PathMatrix[start.Index, end.Index] = null;
 		this.PathMatrix[end.Index, start.Index] = null;
 		Destroy(path.gameObject);
-		this.OnMapChanged?.Invoke();
 	}
 }

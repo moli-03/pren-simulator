@@ -1,0 +1,49 @@
+using System.Collections;
+using System.Collections.Generic;
+using Assets.Src.Vehicle.Graph;
+using Assets.Src.Vehicle.States;
+using UnityEngine;
+
+public class VehicleController : MonoBehaviour
+{
+
+	private VehicleState State;
+
+	[HideInInspector]
+	public VehicleMap Map { get; private set; }
+
+	[HideInInspector]
+	public List<MapNode> NodeHistory = new List<MapNode>();
+	
+	[HideInInspector]
+	public DifferentialDrive Drive;
+
+	public LineSensorBoard SensorBoard;
+
+	public void SetState(VehicleState state) {
+		this.State = state;
+	}
+
+
+	public void StoreNode(Vector3 nodeWorldPosition) {
+		MapNode node = this.Map.AddMapNodeFromWorldPosition(nodeWorldPosition);
+		this.NodeHistory.Add(node);
+	}
+	
+
+    // Start is called before the first frame update
+    void Start()
+    {
+		this.Drive = this.GetComponent<DifferentialDrive>();
+		this.Map = new VehicleMap();
+        this.State = new WaitingOnStartingPosition(this);
+		this.SensorBoard = this.GetComponentInChildren<LineSensorBoard>();
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        this.State.Update();
+    }
+
+}

@@ -1,11 +1,10 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Assets.Src.Vehicle.States;
 
 public class LineFollower : MonoBehaviour
 {
 
+/*
     public IRSensor LeftSensor;
 
     public IRSensor RightSensor;
@@ -48,5 +47,5 @@ public class LineFollower : MonoBehaviour
 
         this.State.Update();
     }
-
+*/
 }
