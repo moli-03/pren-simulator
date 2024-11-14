@@ -9,13 +9,14 @@ public class Map : MonoBehaviour
     public GameObject PathPrefab;
 	public GameObject BarrierPrefab;
 	public GameObject ConePrefab;
+	public GameObject VehiclePrefab;
     public LayerMask GroundLayer;
     public LayerMask GraphLayer;
     private Camera MainCamera;
 	public static readonly int NODE_COUNT = 8;
 
     public List<Node> Nodes = new List<Node>();
-	public Path[,] PathMatrix = new Path[NODE_COUNT, NODE_COUNT];
+	public Path[,] PathMatrix = new Path[NODE_COUNT + 1, NODE_COUNT + 1];
 
     struct DragInfo
     {
@@ -52,14 +53,14 @@ public class Map : MonoBehaviour
         this.MainCamera = Camera.main;
 
         // Create all node instances on their default positions
-        Node A = Instantiate(NodePrefab, new Vector3(1.5f, 0, 0), Quaternion.identity).GetComponent<Node>().SetLabel("A");
-        Node B = Instantiate(NodePrefab, new Vector3(0, 0, 0.5f), Quaternion.identity).GetComponent<Node>().SetLabel("B");
-        Node C = Instantiate(NodePrefab, new Vector3(3, 0, 0.5f), Quaternion.identity).GetComponent<Node>().SetLabel("C");
-        Node D = Instantiate(NodePrefab, new Vector3(1f, 0, 1f), Quaternion.identity).GetComponent<Node>().SetLabel("D");
-        Node E = Instantiate(NodePrefab, new Vector3(0, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("E");
-        Node F = Instantiate(NodePrefab, new Vector3(1f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("F");
-        Node G = Instantiate(NodePrefab, new Vector3(3f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("G");
-        Node H = Instantiate(NodePrefab, new Vector3(1.5f, 0, 2f), Quaternion.identity).GetComponent<Node>().SetLabel("H");
+        Node A = Instantiate(NodePrefab, new Vector3(2, 0, 0.1f), Quaternion.identity).GetComponent<Node>().SetLabel("A");
+        Node B = Instantiate(NodePrefab, new Vector3(0.5f, 0, 0.5f), Quaternion.identity).GetComponent<Node>().SetLabel("B");
+        Node C = Instantiate(NodePrefab, new Vector3(3.5f, 0, 0.5f), Quaternion.identity).GetComponent<Node>().SetLabel("C");
+        Node D = Instantiate(NodePrefab, new Vector3(1.5f, 0, 1f), Quaternion.identity).GetComponent<Node>().SetLabel("D");
+        Node E = Instantiate(NodePrefab, new Vector3(0.5f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("E");
+        Node F = Instantiate(NodePrefab, new Vector3(1.5f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("F");
+        Node G = Instantiate(NodePrefab, new Vector3(3.5f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("G");
+        Node H = Instantiate(NodePrefab, new Vector3(2f, 0, 2f), Quaternion.identity).GetComponent<Node>().SetLabel("H");
 
         // Add to node list
         this.AddNode(A);
@@ -70,6 +71,16 @@ public class Map : MonoBehaviour
         this.AddNode(F);
         this.AddNode(G);
         this.AddNode(H);
+
+		// Create start
+		Node start = Instantiate(NodePrefab, new Vector3(2, 0, -0.4f), Quaternion.identity).GetComponent<Node>().SetLabel("S");
+		this.AddNode(start);
+
+		// Create a path to the first node
+		this.AddPath(start, A);
+
+		// Add vehicle
+		GameObject vehicle = Instantiate(VehiclePrefab, start.transform.position + new Vector3(0, 0.15f, 0), Quaternion.identity);
 
         // Add the default connections
         // From A
