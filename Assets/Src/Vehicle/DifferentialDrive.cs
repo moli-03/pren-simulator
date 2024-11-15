@@ -129,6 +129,8 @@ public class DifferentialDrive : MonoBehaviour
 		// Maybe minus here
 		float deg = Vector2.SignedAngle(this.Forward, direction);
 
+		Debug.Log("Angle: " + deg);
+
 		// Check if we dont have to turn at all
 		if (deg == 0) {
 			done.Invoke();
