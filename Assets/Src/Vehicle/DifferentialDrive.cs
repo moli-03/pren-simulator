@@ -157,14 +157,14 @@ public class DifferentialDrive : MonoBehaviour
 	}
 
 	private float GetAngularVelocityMps() {
-		return -(this.GetVelocityMps(this.RightWheelRpm) - this.GetVelocityMps(this.LeftWheelRpm)) / this.WheelDistance;
+		return (this.GetVelocityMps(this.RightWheelRpm) - this.GetVelocityMps(this.LeftWheelRpm)) / this.WheelDistance;
 	}
 
 
     void Update()
     {
     	float v = this.GetForwardLinearVelocityMps();
-    	float w = this.GetAngularVelocityMps();
+    	float w = -this.GetAngularVelocityMps();
 
     	// Update orientation with the angular velocity
     	float deltaOrientation = w * Time.deltaTime;
