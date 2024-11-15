@@ -12,8 +12,8 @@ public class DifferentialDrive : MonoBehaviour
 	public float WheelDistance;
 	public readonly float WheelRadius = 0.03f;
 
-	private Vector3 InitialWorldPosition;
-	private float InitialWorldRotation;
+	public Vector3 InitialWorldPosition;
+	public float InitialWorldRotation;
 	public Vector3 CalculatedWorldForward => Pathing.Vec2ToVec3(new Vector2(Mathf.Sin(this.CalculatedWorldOrientation), Mathf.Cos(this.CalculatedWorldOrientation))).normalized;
 	public Vector3 CalculatedWorldPosition => Pathing.Vec2ToVec3(this.Position) + this.InitialWorldPosition;
 	public Vector2 Forward => new Vector2(Mathf.Sin(this.Orientation), Mathf.Cos(this.Orientation)).normalized;
@@ -127,9 +127,7 @@ public class DifferentialDrive : MonoBehaviour
 	public void RotateFacing(Vector2 direction, Action done) {
 
 		// Maybe minus here
-		float deg = Vector2.SignedAngle(this.Forward, direction);
-
-		Debug.Log("Angle: " + deg);
+		float deg = -Vector2.SignedAngle(this.Forward, direction);
 
 		// Check if we dont have to turn at all
 		if (deg == 0) {

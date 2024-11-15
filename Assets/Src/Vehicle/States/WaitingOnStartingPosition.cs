@@ -13,11 +13,8 @@ namespace Assets.Src.Vehicle.States {
 
 			if (Input.GetKeyDown(KeyCode.Return)) {
 
-				// Set the relative origin of the map
-				this.Vehicle.Map.SetOrigin(this.Vehicle.transform.position);
-
-				// Store the node
-				this.Vehicle.StoreNode(this.Vehicle.transform.position);
+				// Store the first node
+				this.Vehicle.StoreNode(this.Vehicle.Position);
 
 				// New state is searching for paths to find the entrance to the graph
 				this.Vehicle.SetState(new FindPathsOfNode(this.Vehicle));

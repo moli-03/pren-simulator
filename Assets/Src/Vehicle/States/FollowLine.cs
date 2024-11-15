@@ -24,15 +24,7 @@ namespace Assets.Src.Vehicle.States {
 				return;
 			}
 
-			// Check if all horizontal sensors hit something
-			if (!this.Vehicle.SensorBoard.HorizontalSensors.Any(sensor => !Pathing.IsOnLine(sensor))) {
-
-				// Check if we have previously found the 
-				if (!this.CircleDetectedAt.HasValue) {
-					this.CircleDetectedAt = this.Vehicle.Position;
-					return;
-				}
-
+			if (this.CircleDetectedAt.HasValue) {
 				// Go on until we reach the center of the node
 				if ((this.CircleDetectedAt.Value - this.Vehicle.Position).magnitude < Constants.NODE_RADIUS) {
 					return;
@@ -41,8 +33,16 @@ namespace Assets.Src.Vehicle.States {
 				// Stop the car
 				this.Vehicle.Drive.Stop();
 
+				// Add to map
+				this.Vehicle.Map.AddNodeAt(this.Vehicle.Position);
+
 				// Circle reached (stupid stuff here)
 				this.Vehicle.SetState(new FindPathsOfNode(this.Vehicle));
+			}
+
+			// Check if all horizontal sensors hit something
+			if (!this.Vehicle.SensorBoard.HorizontalSensors.Any(sensor => !Pathing.IsOnLine(sensor))) {
+				this.CircleDetectedAt = this.Vehicle.Position;
 			}
 		}
 	}

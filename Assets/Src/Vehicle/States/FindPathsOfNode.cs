@@ -31,6 +31,9 @@ namespace Assets.Src.Vehicle.States {
 				// Start slowly rotating left
 				this.Vehicle.Drive.TurnLeftOnSpot(0.1f);
 			}
+			else {
+				this.StartScanningForPaths();
+			}
 		}
 
 		private void AddPaths() {
@@ -69,6 +72,7 @@ namespace Assets.Src.Vehicle.States {
 				int index = (new System.Random()).Next(0, this.CurrentNode.OutgoingPaths.Count - 1);
 				MapPath chosenPath = this.CurrentNode.OutgoingPaths[index];
 
+				Debug.Log("Chose direction: " + chosenPath.Direction);
 				// Turn to that line
 				this.Vehicle.Drive.RotateFacing(chosenPath.Direction, () => {
 
