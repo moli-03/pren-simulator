@@ -503,11 +503,6 @@ MonoBehaviour:
   FrontSensor: {fileID: 0}
   HorizontalSensors: []
   VerticalSensors: []
-  HorizontalSensorCount: 5
-  VerticalSensorCount: 3
-  VerticalSensorDistance: 0.02
-  HorizontalSensorDistance: 0.02
-  FrontSensorDistance: 0.14
 --- !u!1 &6439489329973962275
 GameObject:
   m_ObjectHideFlags: 0
@@ -558,8 +553,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ce70d7fb4db611459081c2692f724e2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MaxSpeed: 10
-  TurnSpeed: 45
+  LeftWheel: {fileID: 3292293544751668486}
+  RightWheel: {fileID: 938802123617121396}
+  WheelDistance: 0
+  InitialPositionOffset: {x: 0, y: 0}
 --- !u!114 &1296137221884860087
 MonoBehaviour:
   m_ObjectHideFlags: 0

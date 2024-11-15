@@ -20,6 +20,10 @@ public class VehicleController : MonoBehaviour
 
 	public LineSensorBoard SensorBoard;
 
+	public Vector2 Position => this.Drive.Position;
+	public float Orientation => this.Drive.Orientation;
+	public Vector2 Forward => this.Drive.Forward;
+
 	public void SetState(VehicleState state) {
 		this.State = state;
 	}

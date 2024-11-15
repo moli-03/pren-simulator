@@ -6,17 +6,20 @@ namespace Assets.Src.Vehicle.Graph {
 	public class MapNode {
 
 		// The position of the node
-		public Vector3 Position { get; }
+		public Vector2 Position { get; }
 
 		// The directions of the outgoing paths (not explored yet)
-		private List<Vector3> OutgoingPaths = new List<Vector3>();
+		public List<MapPath> OutgoingPaths = new List<MapPath>();
 
-		public MapNode(Vector3 position) {
+		public MapNode(Vector2 position) {
 			this.Position = position;
 		}
 
-		public void AddOutgoingPath(Vector3 path) {
-			this.OutgoingPaths.Add(path);
+		public void AddOutgoingPath(Vector2 direction) {
+			MapPath outgoingPath = new MapPath();
+			outgoingPath.Direction = direction.normalized;
+			outgoingPath.Start = this;
+			this.OutgoingPaths.Add(outgoingPath);
 		}
 	}
 
