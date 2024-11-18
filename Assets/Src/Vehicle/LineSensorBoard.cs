@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class LineSensorBoard : MonoBehaviour {
 
-	public IRSensor FrontSensor;
+	public IRSensor[] FrontSensors = new IRSensor[3];
 
 	public List<IRSensor> HorizontalSensors = new List<IRSensor>();
 	public List<IRSensor> VerticalSensors = new List<IRSensor>();
@@ -23,6 +24,9 @@ public class LineSensorBoard : MonoBehaviour {
 	[HideInInspector]
 	public readonly float FrontSensorDistance = 0.14f;
 
+	[HideInInspector]
+	public readonly float FrontSensorGap = 0.025f;
+
 	private IRSensor CreateIRSensorGameObject(Vector3 position)
 	{
     	// Create the new GameObject and add the IRSensor component
@@ -41,8 +45,10 @@ public class LineSensorBoard : MonoBehaviour {
 
 	void Start() {
 
-		// Create the front sensor
-		this.FrontSensor = CreateIRSensorGameObject(new Vector3(0, 0, this.FrontSensorDistance));
+		// Create the front sensors
+		this.FrontSensors[0] = CreateIRSensorGameObject(new Vector3(-this.FrontSensorGap, 0, this.FrontSensorDistance));
+		this.FrontSensors[1] = CreateIRSensorGameObject(new Vector3(0, 0, this.FrontSensorDistance));
+		this.FrontSensors[2] = CreateIRSensorGameObject(new Vector3(this.FrontSensorGap, 0, this.FrontSensorDistance));
 
 		// Create the middle sensor
 		IRSensor middleSensor = CreateIRSensorGameObject(Vector3.zero);
@@ -81,7 +87,9 @@ public class LineSensorBoard : MonoBehaviour {
 
 	void ShowDebugLines() {
 
-		this.FrontSensor.DrawDebugLine();
+		foreach (IRSensor sensor in this.FrontSensors) {
+			sensor.DrawDebugLine();
+		}
 
 		this.HorizontalSensors.ForEach(sensor => sensor.DrawDebugLine());
 		this.VerticalSensors.ForEach(sensor => sensor.DrawDebugLine());

@@ -14,10 +14,14 @@ namespace Assets.Src.Vehicle.Graph {
 
 		public GameObject DebugObject;
 
+		public bool OutgoingPathsScanned = false;
+
 		public MapNode(Vector2 position) {
 			this.Position = position;
 
-			Draw.DrawCircle(Pathing.ToWorldPosition(this.Position), Color.cyan);
+			Vector3 circlePos = Pathing.ToWorldPosition(this.Position);
+			circlePos.y = 0.05f;
+			Draw.DrawCircle(circlePos, Color.cyan);
 		}
 
 		public void AddOutgoingPath(Vector2 direction) {
@@ -27,6 +31,10 @@ namespace Assets.Src.Vehicle.Graph {
 			this.OutgoingPaths.Add(outgoingPath);
 
 			outgoingPath.DrawDebugLines();
+		}
+
+		public void AddOutgoingPath(MapPath path) {
+			this.OutgoingPaths.Add(path);
 		}
 	}
 

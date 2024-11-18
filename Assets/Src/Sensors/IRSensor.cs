@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using UnityEngine;
 
 public class IRSensor : MonoBehaviour
@@ -36,7 +37,6 @@ public class IRSensor : MonoBehaviour
         	lineRenderer.SetPosition(0, start);
         	lineRenderer.SetPosition(1, end);
 		}
-
 	}
 
     public float GetReflectedLight()
@@ -57,7 +57,7 @@ public class IRSensor : MonoBehaviour
 
         Color color;
 
-        // Color of gameobjects with a texture
+        // Color of gameObjects with a texture
         if (renderer != null && renderer.material.mainTexture != null)
         {
             // Get the texture from the object
@@ -73,7 +73,7 @@ public class IRSensor : MonoBehaviour
             // Get the color at the pixel coordinates
             color = texture.GetPixel((int)pixelUV.x, (int)pixelUV.y);
         }
-        // Color of gameobjects without a texture (lines etc.)
+        // Color of gameObjects without a texture (lines etc.)
         else if (renderer != null)
         {
             color = renderer.material.color;

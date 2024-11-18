@@ -31,9 +31,10 @@ public class VehicleController : MonoBehaviour
 	}
 
 
-	public void StoreNode(Vector2 nodeWorldPosition) {
+	public MapNode StoreNode(Vector2 nodeWorldPosition) {
 		MapNode node = this.Map.AddNodeAt(nodeWorldPosition);
 		this.NodeHistory.Add(node);
+		return node;
 	}
 	
 

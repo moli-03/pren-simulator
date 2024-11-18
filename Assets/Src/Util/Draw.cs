@@ -9,6 +9,7 @@ namespace Assets.Src.Util {
 			obj.transform.localScale = new Vector3(0.03f, 0.005f, 0.03f);
 			obj.transform.position = position;
 			obj.GetComponent<Renderer>().material.color = color;
+			GameObject.Destroy(obj.GetComponent<CapsuleCollider>());
 
 			return obj;
 		}

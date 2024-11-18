@@ -16,7 +16,11 @@ namespace Assets.Src.Vehicle.Graph {
 
 		public void DrawDebugLines() {
 
-			Draw.DrawLine(Pathing.ToWorldPosition(this.Start.Position), Pathing.Vec2ToVec3(this.Direction));
+			Vector3 start = Pathing.ToWorldPosition(this.Start.Position);
+			start.y = 0.05f;
+			Vector3 end = Pathing.Vec2ToVec3(this.Direction);
+			end.y = 0.05f;
+			Draw.DrawLine(start, end);
 
 		}
 	}

@@ -59,6 +59,14 @@ public class DifferentialDrive : MonoBehaviour
 		this.RightWheelRpm = this.MaxRpm * Math.Clamp(percent, -1, 1);
 	}
 
+	public void SetLeftWheelRpm(float rpm) {
+		this.LeftWheelRpm = Math.Clamp(rpm, -this.MaxRpm, this.MaxRpm);
+	}
+
+	public void SetRightWheelRpm(float rpm) {
+		this.RightWheelRpm = Math.Clamp(rpm, -this.MaxRpm, this.MaxRpm);
+	}
+
 	public void DriveForwardPercent(float percent) {
 		this.SetLeftWheelSpeedPercent(percent);
 		this.SetRightWheelSpeedPercent(percent);
@@ -85,7 +93,7 @@ public class DifferentialDrive : MonoBehaviour
     	float previousRotation = this.Orientation;
 
     	// Set wheel speeds for turning
-    	float turnSpeed = 0.8f;
+    	float turnSpeed = 0.35f;
 
     	if (deg > 0) {
         	this.TurnRightOnSpot(turnSpeed);  // Turn right if positive degree
@@ -161,7 +169,7 @@ public class DifferentialDrive : MonoBehaviour
 	}
 
 
-    void Update()
+    void FixedUpdate()
     {
     	float v = this.GetForwardLinearVelocityMps();
     	float w = -this.GetAngularVelocityMps();

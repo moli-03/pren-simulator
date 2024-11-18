@@ -4,7 +4,7 @@ namespace Assets.Src.Util {
 
 	public static class Pathing {
 
-    	public static readonly float MinLineReflectionValue = 0.7f;
+    	public static readonly float MinLineReflectionValue = 0.8f;
 
 		public static bool IsOnLine(IRSensor sensor) {
 			return sensor.GetReflectedLight() >= MinLineReflectionValue;

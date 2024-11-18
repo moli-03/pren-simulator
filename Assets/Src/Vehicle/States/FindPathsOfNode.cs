@@ -11,8 +11,9 @@ namespace Assets.Src.Vehicle.States {
 	{
 		private bool Turned = false;
 		private bool StartedOnLine = false;
+		private bool StartedOnLineFoundLine = false;
 		private bool Turning = false;
-		private bool LinePreviouslyFound = false;
+		private bool LinePreviouslyHovered = false;
 		private MapNode CurrentNode;
 		private List<LineEdgePoints> EdgePoints = new List<LineEdgePoints>();
 
@@ -26,7 +27,17 @@ namespace Assets.Src.Vehicle.States {
 
 			this.CurrentNode = this.Vehicle.NodeHistory.Last();
 
-			if (Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontSensor)) {
+			// Check if we have already scanned the outgoing paths for that node
+			if (this.CurrentNode.OutgoingPathsScanned) {
+
+				// If so, directly choose the next path
+				this.ChooseNextPath();
+				return;
+			}
+
+			// Check if the front middle sensor is on the line
+			if (Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontSensors[1])) {
+
 				this.StartedOnLine = true;
 				// Start slowly rotating left
 				this.Vehicle.Drive.TurnLeftOnSpot(0.1f);
@@ -50,8 +61,10 @@ namespace Assets.Src.Vehicle.States {
 				Vector2 direction = middle - this.CurrentNode.Position;
 
 				this.CurrentNode.AddOutgoingPath(direction);
+
 			});
 
+			this.CurrentNode.OutgoingPathsScanned = true;
 		}
 
 
@@ -59,7 +72,7 @@ namespace Assets.Src.Vehicle.States {
 
 			this.Turning = true;
 			this.Turned = false;
-			this.LinePreviouslyFound = false;
+			this.LinePreviouslyHovered = false;
 
 			this.Vehicle.Drive.TurnDeg(360, () => {
 
@@ -68,18 +81,24 @@ namespace Assets.Src.Vehicle.States {
 				// Add the found paths to the node
 				this.AddPaths();
 
-				// TODO: Dont chose randomly
-				int index = (new System.Random()).Next(0, this.CurrentNode.OutgoingPaths.Count - 1);
-				MapPath chosenPath = this.CurrentNode.OutgoingPaths[index];
-
-				// Turn to that line
-				this.Vehicle.Drive.RotateFacing(chosenPath.Direction, () => {
-				
-					// Start to follow that line
-					this.Vehicle.SetState(new FollowLine(this.Vehicle));
-				});
-				return;
+				this.ChooseNextPath();
 			});
+		}
+
+
+		private void ChooseNextPath() {
+
+			// TODO: Dont chose randomly
+			int index = (new System.Random()).Next(0, this.CurrentNode.OutgoingPaths.Count - 1);
+			MapPath chosenPath = this.CurrentNode.OutgoingPaths[index];
+
+			// Turn to that line
+			this.Vehicle.Drive.RotateFacing(chosenPath.Direction, () => {
+				
+				// Start to follow that line
+				this.Vehicle.SetState(new FollowLine(this.Vehicle, this.CurrentNode, chosenPath));
+			});
+			return;
 		}
 
 		public override void Update()
@@ -89,13 +108,15 @@ namespace Assets.Src.Vehicle.States {
 			}
 
 			// Check if the front sensor is on the line
-			bool isFrontSensorOnLine = Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontSensor);
+			bool isFrontSensorOnLine = Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontSensors[1]);
 
 			// Keep spinning until its no longer on the line
-			if (this.StartedOnLine && !this.Turning) {
+			if (this.StartedOnLine && !this.StartedOnLineFoundLine) {
 				if (isFrontSensorOnLine) {
 					return;
 				}
+
+				this.StartedOnLineFoundLine = true;
 
 				// Behind line now
 				this.StartScanningForPaths();
@@ -105,24 +126,38 @@ namespace Assets.Src.Vehicle.States {
 			// Check if we are hovering a line
 			if (isFrontSensorOnLine) {
 
-				// Yes -> were we previously on the line?
-				if (LinePreviouslyFound) {
+				// Were we previously on a line?
+				if (this.LinePreviouslyHovered) {
 					return;
 				}
 
-				LinePreviouslyFound = true;
+				this.LinePreviouslyHovered = true;
+
+				// Initially store the position
 				this.EdgePoints.Add(new LineEdgePoints() {
 					Left = this.Vehicle.Position + this.Vehicle.Forward * this.Vehicle.SensorBoard.FrontSensorDistance
 				});
+
+				Vector3 test = this.Vehicle.SensorBoard.FrontSensors[1].transform.position;
+				test.y = 0.001f;
+				Draw.DrawCircle(test, Color.green);
 			}
 			else {
 
 				// No longer on a line?
-				if (this.LinePreviouslyFound) {
+				if (this.LinePreviouslyHovered) {
+
+					// Get the last edge point duo we hovered
 					var currentEdgePoint = this.EdgePoints.Last();
+
+					// Set the right
 					currentEdgePoint.Right = this.Vehicle.Position + this.Vehicle.Forward * this.Vehicle.SensorBoard.FrontSensorDistance;
 					this.EdgePoints[this.EdgePoints.Count - 1] = currentEdgePoint;
-					this.LinePreviouslyFound = false;
+					this.LinePreviouslyHovered = false;
+
+					Vector3 test = this.Vehicle.SensorBoard.FrontSensors[1].transform.position;
+					test.y = 0.001f;
+					Draw.DrawCircle(test, Color.magenta);
 				}
 
 			}
