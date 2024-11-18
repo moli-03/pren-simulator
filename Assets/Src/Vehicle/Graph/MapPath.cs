@@ -1,3 +1,4 @@
+using Assets.Src.Util;
 using UnityEngine;
 
 namespace Assets.Src.Vehicle.Graph {
@@ -11,6 +12,13 @@ namespace Assets.Src.Vehicle.Graph {
 		public Vector2 Direction = Vector3.zero;
 		public float Length => (End.Position - Start.Position).magnitude;
 
+		public LineRenderer lineRenderer;
+
+		public void DrawDebugLines() {
+
+			Draw.DrawLine(Pathing.ToWorldPosition(this.Start.Position), Pathing.Vec2ToVec3(this.Direction));
+
+		}
 	}
 
 }

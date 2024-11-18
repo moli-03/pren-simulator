@@ -17,6 +17,10 @@ namespace Assets.Src.Util {
 		public static Vector3 Vec2ToVec3(Vector2 vector, float y = 0) {
 			return new Vector3(vector.x, y, vector.y);
 		}
+
+		public static Vector3 ToWorldPosition(Vector2 position) {
+			return VehicleController.Instance.Drive.InitialWorldPosition + Vec2ToVec3(position);
+		}
 	}
 
 }

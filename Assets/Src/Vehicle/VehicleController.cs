@@ -7,6 +7,8 @@ using UnityEngine;
 public class VehicleController : MonoBehaviour
 {
 
+	public static VehicleController Instance { get; private set; }
+
 	private VehicleState State;
 
 	[HideInInspector]
@@ -38,6 +40,7 @@ public class VehicleController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+		Instance = this;
 		this.Drive = this.GetComponent<DifferentialDrive>();
 		this.Map = new VehicleMap();
         this.State = new WaitingOnStartingPosition(this);

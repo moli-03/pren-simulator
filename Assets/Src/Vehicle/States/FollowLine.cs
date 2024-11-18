@@ -1,5 +1,6 @@
 using System.Linq;
 using Assets.Src.Util;
+using Assets.Src.Vehicle.Graph;
 using UnityEngine;
 
 namespace Assets.Src.Vehicle.States {
@@ -26,7 +27,7 @@ namespace Assets.Src.Vehicle.States {
 
 			if (this.CircleDetectedAt.HasValue) {
 				// Go on until we reach the center of the node
-				if ((this.CircleDetectedAt.Value - this.Vehicle.Position).magnitude < Constants.NODE_RADIUS) {
+				if ((this.CircleDetectedAt.Value - this.Vehicle.Position).magnitude < Constants.NODE_RADIUS / 2) {
 					return;
 				}
 
@@ -34,7 +35,7 @@ namespace Assets.Src.Vehicle.States {
 				this.Vehicle.Drive.Stop();
 
 				// Add to map
-				this.Vehicle.Map.AddNodeAt(this.Vehicle.Position);
+				this.Vehicle.StoreNode(this.Vehicle.Position);
 
 				// Circle reached (stupid stuff here)
 				this.Vehicle.SetState(new FindPathsOfNode(this.Vehicle));
