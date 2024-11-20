@@ -49,9 +49,13 @@ public class VehicleController : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
-        this.State.Update();
+        this.State.FixedUpdate();
     }
+
+	void Update() {
+		this.State.Update();
+	}
 
 }

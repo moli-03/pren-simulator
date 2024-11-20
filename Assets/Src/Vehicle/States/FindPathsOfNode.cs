@@ -12,7 +12,6 @@ namespace Assets.Src.Vehicle.States {
 		private bool Turned = false;
 		private bool StartedOnLine = false;
 		private bool StartedOnLineFoundLine = false;
-		private bool Turning = false;
 		private bool LinePreviouslyHovered = false;
 		private MapNode CurrentNode;
 		private List<LineEdgePoints> EdgePoints = new List<LineEdgePoints>();
@@ -40,7 +39,7 @@ namespace Assets.Src.Vehicle.States {
 
 				this.StartedOnLine = true;
 				// Start slowly rotating left
-				this.Vehicle.Drive.TurnLeftOnSpot(0.1f);
+				this.Vehicle.Drive.TurnLeftOnSpot(0.2f);
 			}
 			else {
 				this.StartScanningForPaths();
@@ -70,7 +69,6 @@ namespace Assets.Src.Vehicle.States {
 
 		private void StartScanningForPaths() {
 
-			this.Turning = true;
 			this.Turned = false;
 			this.LinePreviouslyHovered = false;
 
@@ -101,14 +99,20 @@ namespace Assets.Src.Vehicle.States {
 			return;
 		}
 
-		public override void Update()
+		public new void FixedUpdate()
 		{
 			if (this.Turned) {
 				return;
 			}
 
 			// Check if the front sensor is on the line
-			bool isFrontSensorOnLine = Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontSensors[1]);
+			bool isFrontSensorOnLine = Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontFrontSensorTimmyStuff);
+
+			Vector3 position = Pathing.ToWorldPosition(this.Vehicle.Position + this.Vehicle.Forward * 0.14f);
+			position.y = isFrontSensorOnLine ? 0.03f : 0.01f;
+			if (isFrontSensorOnLine) {
+				Draw.DrawCircle(position, isFrontSensorOnLine ? Color.cyan : Color.magenta);
+			}
 
 			// Keep spinning until its no longer on the line
 			if (this.StartedOnLine && !this.StartedOnLineFoundLine) {
@@ -137,10 +141,6 @@ namespace Assets.Src.Vehicle.States {
 				this.EdgePoints.Add(new LineEdgePoints() {
 					Left = this.Vehicle.Position + this.Vehicle.Forward * this.Vehicle.SensorBoard.FrontSensorDistance
 				});
-
-				Vector3 test = this.Vehicle.SensorBoard.FrontSensors[1].transform.position;
-				test.y = 0.001f;
-				Draw.DrawCircle(test, Color.green);
 			}
 			else {
 
@@ -154,10 +154,6 @@ namespace Assets.Src.Vehicle.States {
 					currentEdgePoint.Right = this.Vehicle.Position + this.Vehicle.Forward * this.Vehicle.SensorBoard.FrontSensorDistance;
 					this.EdgePoints[this.EdgePoints.Count - 1] = currentEdgePoint;
 					this.LinePreviouslyHovered = false;
-
-					Vector3 test = this.Vehicle.SensorBoard.FrontSensors[1].transform.position;
-					test.y = 0.001f;
-					Draw.DrawCircle(test, Color.magenta);
 				}
 
 			}

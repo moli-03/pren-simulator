@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class LineSensorBoard : MonoBehaviour {
 
+	public IRSensor FrontFrontSensorTimmyStuff;
+
 	public IRSensor[] FrontSensors = new IRSensor[3];
 
 	public List<IRSensor> HorizontalSensors = new List<IRSensor>();
@@ -22,7 +24,7 @@ public class LineSensorBoard : MonoBehaviour {
 	public readonly float HorizontalSensorDistance = 0.035f;
 	
 	[HideInInspector]
-	public readonly float FrontSensorDistance = 0.14f;
+	public readonly float FrontSensorDistance = 0.09f;
 
 	[HideInInspector]
 	public readonly float FrontSensorGap = 0.025f;
@@ -44,6 +46,8 @@ public class LineSensorBoard : MonoBehaviour {
 
 
 	void Start() {
+
+		this.FrontFrontSensorTimmyStuff = CreateIRSensorGameObject(new Vector3(0, 0, 0.14f));
 
 		// Create the front sensors
 		this.FrontSensors[0] = CreateIRSensorGameObject(new Vector3(-this.FrontSensorGap, 0, this.FrontSensorDistance));

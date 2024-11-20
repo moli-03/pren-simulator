@@ -1,3 +1,4 @@
+using Assets.Src.Util;
 using TMPro;
 using UnityEngine;
 
@@ -50,7 +51,7 @@ public class Path : MonoBehaviour
         Vector3 connectionVector = this.EndNode.transform.position - this.StartNode.transform.position;
 
         // Apply the scale based on the calculated vector
-        this.Line.transform.localScale = new Vector3(connectionVector.magnitude, 0.001f, 0.03f);
+        this.Line.transform.localScale = new Vector3(connectionVector.magnitude, 0.001f, Constants.PATH_WIDTH);
 
         // Start from Node 1
         this.transform.localPosition = this.StartNode.transform.position + 0.5f * connectionVector;

@@ -1,9 +1,14 @@
+using Assets.Src.Util;
 using TMPro;
 using UnityEngine;
 
 public class Node : MonoBehaviour
 {
 	public int Index { get; set; }
+
+	void Start() {
+		this.transform.localScale = new Vector3(Constants.NODE_RADIUS * 2, 0.001f, Constants.NODE_RADIUS * 2);
+	}
 
     public Node SetLabel(string label)
     {

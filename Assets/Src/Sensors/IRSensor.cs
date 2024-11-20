@@ -82,13 +82,8 @@ public class IRSensor : MonoBehaviour
         {
             return 0f;
         }
-
-        // Convert the color to grayscale (luminance)
-        // Grayscale value is an approximation of how bright the color is.
-        float grayscale = color.r * 0.299f + color.g * 0.587f + color.b * 0.114f;
-
-        // Simulate infrared output: map grayscale (0 = cold/black, 1 = hot/white)
-        // You could apply custom scaling or thresholds here based on your sensor's range.
-        return grayscale; // This is the "temperature" in infrared terms.
+		
+		// Return the grayscale value of the color
+		return color.grayscale;
     }
 }

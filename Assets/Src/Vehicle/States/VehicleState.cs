@@ -12,7 +12,13 @@ namespace Assets.Src.Vehicle.States
             this.Vehicle = vehicle;
         }
 
-        public abstract void Update();
+        public void Update() {
+
+		}
+
+		public void FixedUpdate() {
+			
+		}
 
     }
 }

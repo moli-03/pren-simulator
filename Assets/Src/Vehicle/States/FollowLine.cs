@@ -19,13 +19,13 @@ namespace Assets.Src.Vehicle.States {
 		public FollowLine(VehicleController vehicle, MapNode startNode, MapPath followPath) : base(vehicle)
 		{
 			this.StartingPosition = this.Vehicle.Position;
-			this.Vehicle.Drive.DriveForwardPercent(0.2f);
+			this.Vehicle.Drive.DriveForwardPercent(0.4f);
 			this.DefaultRpm = this.Vehicle.Drive.LeftWheelRpm;
 			this.StartingNode = startNode;
 			this.FollowPath = followPath;
 		}
 
-		public override void Update()
+		public new void Update()
 		{
 
 			// Stop adjusting
@@ -54,11 +54,11 @@ namespace Assets.Src.Vehicle.States {
 				this.Adjusting = true;
 			}
 
-
 			// Drive the min distance
 			if ((this.StartingPosition - this.Vehicle.Position).magnitude < this.MinDistance) {
 				return;
 			}
+
 
 			// Check if we hit a circle
 			if (this.CircleDetectedAt.HasValue) {
