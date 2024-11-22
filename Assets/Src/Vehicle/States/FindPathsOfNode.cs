@@ -99,7 +99,7 @@ namespace Assets.Src.Vehicle.States {
 			return;
 		}
 
-		public new void FixedUpdate()
+		public override void FixedUpdate()
 		{
 			if (this.Turned) {
 				return;

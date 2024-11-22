@@ -93,7 +93,7 @@ public class DifferentialDrive : MonoBehaviour
     	float previousRotation = this.Orientation;
 
     	// Set wheel speeds for turning
-    	float turnSpeed = 0.25f;
+    	float turnSpeed = 0.4f;
 
     	if (deg > 0) {
         	this.TurnRightOnSpot(turnSpeed);  // Turn right if positive degree

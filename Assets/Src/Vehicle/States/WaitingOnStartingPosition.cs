@@ -8,7 +8,7 @@ namespace Assets.Src.Vehicle.States {
 
 		public WaitingOnStartingPosition(VehicleController vehicle) : base(vehicle) { }
 
-		public new void Update()
+		public override void Update()
 		{
 
 			if (Input.GetKeyDown(KeyCode.Return)) {

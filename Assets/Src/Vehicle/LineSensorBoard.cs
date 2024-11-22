@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Assets.Src.Util;
 using UnityEngine;
 
 public class LineSensorBoard : MonoBehaviour {
@@ -18,16 +19,16 @@ public class LineSensorBoard : MonoBehaviour {
 	public readonly int VerticalSensorCount = 3;
 
 	[HideInInspector]
-	public readonly float VerticalSensorDistance = 0.035f;
+	public readonly float VerticalSensorDistance = Constants.NODE_RADIUS * 4 / 5;
 
 	[HideInInspector]
-	public readonly float HorizontalSensorDistance = 0.035f;
+	public readonly float HorizontalSensorDistance = Constants.NODE_RADIUS * 4 / 5;
 	
 	[HideInInspector]
 	public readonly float FrontSensorDistance = 0.09f;
 
 	[HideInInspector]
-	public readonly float FrontSensorGap = 0.025f;
+	public readonly float FrontSensorGap = Constants.PATH_WIDTH * 3 / 4;
 
 	private IRSensor CreateIRSensorGameObject(Vector3 position)
 	{

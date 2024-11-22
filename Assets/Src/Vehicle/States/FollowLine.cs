@@ -25,7 +25,7 @@ namespace Assets.Src.Vehicle.States {
 			this.FollowPath = followPath;
 		}
 
-		public new void Update()
+		public override void Update()
 		{
 
 			// Stop adjusting
@@ -63,7 +63,7 @@ namespace Assets.Src.Vehicle.States {
 			// Check if we hit a circle
 			if (this.CircleDetectedAt.HasValue) {
 				// Go on until we reach the center of the node
-				if ((this.CircleDetectedAt.Value - this.Vehicle.Position).magnitude < Constants.NODE_RADIUS / 2) {
+				if ((this.CircleDetectedAt.Value - this.Vehicle.Position).magnitude < Constants.NODE_RADIUS / 16) {
 					return;
 				}
 

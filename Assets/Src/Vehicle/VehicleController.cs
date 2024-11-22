@@ -48,7 +48,6 @@ public class VehicleController : MonoBehaviour
 		this.SensorBoard = this.GetComponentInChildren<LineSensorBoard>();
     }
 
-    // Update is called once per frame
     void FixedUpdate()
     {
         this.State.FixedUpdate();

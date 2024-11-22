@@ -12,11 +12,11 @@ namespace Assets.Src.Vehicle.States
             this.Vehicle = vehicle;
         }
 
-        public void Update() {
+        public virtual void Update() {
 
 		}
 
-		public void FixedUpdate() {
+		public virtual void FixedUpdate() {
 			
 		}
 
