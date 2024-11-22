@@ -16,6 +16,11 @@ public class Node : MonoBehaviour
         return this;
     }
 
+    public string GetLabel()
+    {
+        return this.transform.Find("Canvas/Letter").GetComponent<TMP_Text>().text;
+    }
+
 	public Node SetColor(Color color) {
 		this.GetComponent<Renderer>().material.color = color;
 		return this;
