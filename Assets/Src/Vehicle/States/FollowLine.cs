@@ -7,6 +7,7 @@ namespace Assets.Src.Vehicle.States {
 
 	public class FollowLine : VehicleState
 	{
+		public override string Name => "FollowLine";
 
 		private float MinDistance = 0.3f;
 		private Vector2 StartingPosition;
@@ -32,7 +33,7 @@ namespace Assets.Src.Vehicle.States {
 			if (this.Adjusting) {
 
 				// Check if only the middle sensor is on the line
-				if (!Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontSensors[0]) && Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontSensors[1]) && !Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontSensors[2])) {
+				if (!Pathing.IsOnLine(this.Vehicle.SensorBoard.LineFollowSensors[0]) && Pathing.IsOnLine(this.Vehicle.SensorBoard.LineFollowSensors[1]) && !Pathing.IsOnLine(this.Vehicle.SensorBoard.LineFollowSensors[2])) {
 					this.Vehicle.Drive.SetLeftWheelRpm(this.DefaultRpm);
 					this.Vehicle.Drive.SetRightWheelRpm(this.DefaultRpm);
 					this.Adjusting = false;
@@ -40,57 +41,72 @@ namespace Assets.Src.Vehicle.States {
 
 			}
 
-			// Adjust to left
-			if (!this.Adjusting && Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontSensors[0]) && Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontSensors[1])) {
-				this.Vehicle.Drive.SetRightWheelRpm(this.Vehicle.Drive.RightWheelRpm + 50);
-				this.Vehicle.Drive.SetLeftWheelRpm(this.DefaultRpm);
+			// Check if the right line follow sensor is on the line
+			if (!this.Adjusting && Pathing.IsOnLine(this.Vehicle.SensorBoard.LineFollowSensors[2])) {
+
 				this.Adjusting = true;
+
+				// If the middle sensor is not on the line we have to drastically adjust
+				if (!Pathing.IsOnLine(this.Vehicle.SensorBoard.LineFollowSensors[1])) {
+
+					// Only need to adjust drastically
+					this.Vehicle.Drive.SetLeftWheelRpm(this.DefaultRpm + 150);
+					this.Vehicle.Drive.SetRightWheelRpm(this.DefaultRpm - 50);
+				}
+				else {
+					// Only need to adjust slightly
+					this.Vehicle.Drive.SetLeftWheelRpm(this.DefaultRpm + 50);
+					this.Vehicle.Drive.SetRightWheelRpm(this.DefaultRpm);
+				}
+
 			}
 
-			// Adjust to right
-			if (!this.Adjusting && Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontSensors[1]) && Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontSensors[2])) {
-				this.Vehicle.Drive.SetLeftWheelRpm(this.Vehicle.Drive.LeftWheelRpm + 50);
-				this.Vehicle.Drive.SetRightWheelRpm(this.DefaultRpm);
+			// Check if the left line follow sensor is on the line
+			if (!this.Adjusting && Pathing.IsOnLine(this.Vehicle.SensorBoard.LineFollowSensors[0])) {
+				
 				this.Adjusting = true;
-			}
 
-			// Drive the min distance
-			if ((this.StartingPosition - this.Vehicle.Position).magnitude < this.MinDistance) {
-				return;
+				// If the middle sensor is not on the line we have to drastically adjust
+				if (!Pathing.IsOnLine(this.Vehicle.SensorBoard.LineFollowSensors[1])) {
+					this.Vehicle.Drive.Stop();
+
+					// Only need to adjust drastically
+					this.Vehicle.Drive.SetRightWheelRpm(this.DefaultRpm + 150);
+					this.Vehicle.Drive.SetLeftWheelRpm(this.DefaultRpm - 50);
+				}
+				else {
+
+					// Only need to adjust slightly
+					this.Vehicle.Drive.SetRightWheelRpm(this.DefaultRpm + 50);
+					this.Vehicle.Drive.SetLeftWheelRpm(this.DefaultRpm);
+				}
+
 			}
 
 
 			// Check if we hit a circle
 			if (this.CircleDetectedAt.HasValue) {
-				// Go on until we reach the center of the node
-				if ((this.CircleDetectedAt.Value - this.Vehicle.Position).magnitude < Constants.NODE_RADIUS / 16) {
+
+				// Go on until we roughly reach the center of the node
+				if ((this.CircleDetectedAt.Value - this.Vehicle.Position).magnitude < Constants.NODE_RADIUS / 5) {
 					return;
 				}
 
 				// Stop the car
 				this.Vehicle.Drive.Stop();
 
-				// Check if we have already found a node on that position
-				MapNode node = this.Vehicle.Map.GetNodeAt(this.Vehicle.Position);
-
-				if (node != null) {
-
-					// Add the already visited node to the history
-					this.Vehicle.NodeHistory.Add(node);
-				}
-				else {
-
-					// Add the new node to the map
-					this.Vehicle.StoreNode(this.Vehicle.Position);
-				}
-
-
-				// Circle reached (stupid stuff here)
-				this.Vehicle.SetState(new FindPathsOfNode(this.Vehicle));
+				// Node reached -> try to go to the center
+				this.Vehicle.SetState(new MoveToCenter(this.Vehicle));
 			}
 
-			// Check if all front sensors hit something
+			// Check if all horizontal sensors hit something
 			if (!this.Vehicle.SensorBoard.HorizontalSensors.Any(sensor => !Pathing.IsOnLine(sensor))) {
+
+				// Drive for at least the min distance
+				if ((this.StartingPosition - this.Vehicle.Position).magnitude < this.MinDistance) {
+					return;
+				}
+
 				this.CircleDetectedAt = this.Vehicle.Position;
 				return;
 			}

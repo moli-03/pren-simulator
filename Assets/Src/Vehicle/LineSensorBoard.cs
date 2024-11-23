@@ -1,34 +1,56 @@
-using System.Collections.Generic;
-using System.Linq;
 using Assets.Src.Util;
 using UnityEngine;
 
 public class LineSensorBoard : MonoBehaviour {
 
-	public IRSensor FrontFrontSensorTimmyStuff;
-
-	public IRSensor[] FrontSensors = new IRSensor[3];
-
-	public List<IRSensor> HorizontalSensors = new List<IRSensor>();
-	public List<IRSensor> VerticalSensors = new List<IRSensor>();
+	// Sensor for detecting the outgoing paths of a node
+	[HideInInspector]
+	public IRSensor PathDetectionSensor { get; private set; }
 
 	[HideInInspector]
-	public readonly int HorizontalSensorCount = 3;
+	public float PathDetectionSensorDistanceFromCenter { get; private set; } = 0.14f;
+
+
+
+	// The sensors used to follow the line
+	[HideInInspector]
+	public IRSensor[] LineFollowSensors { get; private set; } = new IRSensor[3];
 
 	[HideInInspector]
-	public readonly int VerticalSensorCount = 3;
+	public float LineFollowSensorDistanceFromCenter { get; private set; } = 0.06f;
 
 	[HideInInspector]
-	public readonly float VerticalSensorDistance = Constants.NODE_RADIUS * 4 / 5;
+	public float LineFollowSensorGap { get; private set; } = Constants.PATH_WIDTH * 3 / 4;
+
+
+	// Horizontal sensors in the middle of the vehicle [top, bottom]
+	[HideInInspector]
+	public IRSensor[] HorizontalSensors { get; private set; } = new IRSensor[2];
 
 	[HideInInspector]
-	public readonly float HorizontalSensorDistance = Constants.NODE_RADIUS * 4 / 5;
+	public float HorizontalSensorDistanceFromCenter { get; private set; } = Constants.NODE_RADIUS - 0.01f; // The outer one should be 0.5cm
+
+
+	// Vertical sensors in the middle of the vehicle [left, right]
+	[HideInInspector]
+	public IRSensor[] VerticalSensors { get; private set; } = new IRSensor[2];
+
+	[HideInInspector]
+	public float VerticalSensorDistanceFromCenter { get; private set; } = Constants.NODE_RADIUS - 0.01f; // The outer one should be 0.5cm
+
+
+	// The sensor in the middle
+	[HideInInspector]
+	public IRSensor MiddleSensor { get; private set; }
+
+
+	// Sensors in between the vertical and horizontal sensors (counted clockwise starting front right)
+	[HideInInspector]
+	public IRSensor[] DiagonalSensors { get; private set; } = new IRSensor[4];
 	
 	[HideInInspector]
-	public readonly float FrontSensorDistance = 0.09f;
+	public float DiagonalSensorFromCenter { get; private set; } = Constants.NODE_RADIUS / 2f;
 
-	[HideInInspector]
-	public readonly float FrontSensorGap = Constants.PATH_WIDTH * 3 / 4;
 
 	private IRSensor CreateIRSensorGameObject(Vector3 position)
 	{
@@ -48,43 +70,31 @@ public class LineSensorBoard : MonoBehaviour {
 
 	void Start() {
 
-		this.FrontFrontSensorTimmyStuff = CreateIRSensorGameObject(new Vector3(0, 0, 0.14f));
+		this.PathDetectionSensor = CreateIRSensorGameObject(new Vector3(0, 0, this.PathDetectionSensorDistanceFromCenter));
 
 		// Create the front sensors
-		this.FrontSensors[0] = CreateIRSensorGameObject(new Vector3(-this.FrontSensorGap, 0, this.FrontSensorDistance));
-		this.FrontSensors[1] = CreateIRSensorGameObject(new Vector3(0, 0, this.FrontSensorDistance));
-		this.FrontSensors[2] = CreateIRSensorGameObject(new Vector3(this.FrontSensorGap, 0, this.FrontSensorDistance));
+		this.LineFollowSensors[0] = CreateIRSensorGameObject(new Vector3(-this.LineFollowSensorGap, 0, this.LineFollowSensorDistanceFromCenter));
+		this.LineFollowSensors[1] = CreateIRSensorGameObject(new Vector3(0, 0, this.LineFollowSensorDistanceFromCenter));
+		this.LineFollowSensors[2] = CreateIRSensorGameObject(new Vector3(this.LineFollowSensorGap, 0, this.LineFollowSensorDistanceFromCenter));
 
 		// Create the middle sensor
-		IRSensor middleSensor = CreateIRSensorGameObject(Vector3.zero);
+		this.MiddleSensor = CreateIRSensorGameObject(Vector3.zero);
 
-		// Create vertical sensors
-		int verticalMiddleIndex = Mathf.CeilToInt((float)this.VerticalSensorCount / 2);
-		for (int i = -(verticalMiddleIndex - 1); i <= verticalMiddleIndex - 1; i++) {
+		// Create the two vertical sensors
+		this.VerticalSensors[0] = CreateIRSensorGameObject(new Vector3(0, 0, this.VerticalSensorDistanceFromCenter));
+		this.VerticalSensors[1] = CreateIRSensorGameObject(new Vector3(0, 0, -this.VerticalSensorDistanceFromCenter));
 
-			// Skip the middle one
-			if (i == verticalMiddleIndex) {
-				this.VerticalSensors.Add(middleSensor);
-				continue;
-			}
+		// Create the two horizontal sensors
+		this.HorizontalSensors[0] = CreateIRSensorGameObject(new Vector3(-this.HorizontalSensorDistanceFromCenter, 0, 0));
+		this.HorizontalSensors[1] = CreateIRSensorGameObject(new Vector3(this.HorizontalSensorDistanceFromCenter, 0, 0));
 
-			float offset = i * this.VerticalSensorDistance;
-			this.VerticalSensors.Add(CreateIRSensorGameObject(new Vector3(0, 0, offset)));
-		}
-
-		// Create horizontal sensors
-		int horizontalMiddleIndex = Mathf.CeilToInt((float)this.HorizontalSensorCount / 2);
-		for (int i = -(horizontalMiddleIndex - 1); i <= horizontalMiddleIndex - 1; i++) {
-
-			// Skip the middle one
-			if (i == horizontalMiddleIndex) {
-				this.HorizontalSensors.Add(middleSensor);
-				continue;
-			}
-
-			float offset = i * this.HorizontalSensorDistance;
-			this.HorizontalSensors.Add(CreateIRSensorGameObject(new Vector3(offset, 0, 0)));
-		}
+		// Create the middle sensors (45 deg)
+		float distanceX = Mathf.Sin(Mathf.PI / 4) * this.DiagonalSensorFromCenter;
+		float distanceY = Mathf.Cos(Mathf.PI / 4) * this.DiagonalSensorFromCenter;
+		this.DiagonalSensors[0] = CreateIRSensorGameObject(new Vector3(distanceX, 0, distanceY));
+		this.DiagonalSensors[1] = CreateIRSensorGameObject(new Vector3(distanceX, 0, -distanceY));
+		this.DiagonalSensors[2] = CreateIRSensorGameObject(new Vector3(-distanceX, 0, -distanceY));
+		this.DiagonalSensors[3] = CreateIRSensorGameObject(new Vector3(-distanceX, 0, distanceY));
 
 		this.ShowDebugLines();
 	}
@@ -92,12 +102,17 @@ public class LineSensorBoard : MonoBehaviour {
 
 	void ShowDebugLines() {
 
-		foreach (IRSensor sensor in this.FrontSensors) {
+		foreach (IRSensor sensor in this.LineFollowSensors) {
 			sensor.DrawDebugLine();
 		}
 
-		this.HorizontalSensors.ForEach(sensor => sensor.DrawDebugLine());
-		this.VerticalSensors.ForEach(sensor => sensor.DrawDebugLine());
+		foreach (IRSensor sensor in this.HorizontalSensors) {
+			sensor.DrawDebugLine();
+		}
+
+		foreach (IRSensor sensor in this.VerticalSensors) {
+			sensor.DrawDebugLine();
+		}
 	}
 
 

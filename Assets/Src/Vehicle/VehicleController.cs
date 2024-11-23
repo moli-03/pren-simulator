@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Assets.Src.Vehicle.Graph;
 using Assets.Src.Vehicle.States;
+using TMPro;
 using UnityEngine;
 
 public class VehicleController : MonoBehaviour
@@ -26,8 +27,12 @@ public class VehicleController : MonoBehaviour
 	public float Orientation => this.Drive.Orientation;
 	public Vector2 Forward => this.Drive.Forward;
 
+	private TMP_Text StateLabel;
+
 	public void SetState(VehicleState state) {
 		this.State = state;
+
+		this.StateLabel.text = "State: " + state.Name;
 	}
 
 
@@ -42,9 +47,10 @@ public class VehicleController : MonoBehaviour
     void Start()
     {
 		Instance = this;
+		this.StateLabel = GameObject.Find("VehicleState").GetComponent<TMP_Text>();
 		this.Drive = this.GetComponent<DifferentialDrive>();
 		this.Map = new VehicleMap();
-        this.State = new WaitingOnStartingPosition(this);
+        this.SetState(new WaitingOnStartingPosition(this));
 		this.SensorBoard = this.GetComponentInChildren<LineSensorBoard>();
     }
 

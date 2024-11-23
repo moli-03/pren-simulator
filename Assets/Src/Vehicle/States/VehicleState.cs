@@ -4,6 +4,7 @@ namespace Assets.Src.Vehicle.States
 {
     public abstract class VehicleState
     {
+		public abstract string Name { get; }
 
         protected VehicleController Vehicle;
 

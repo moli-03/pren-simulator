@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 
 public class Map : MonoBehaviour
@@ -115,7 +116,7 @@ public class Map : MonoBehaviour
 
         List<Node> potentialEndNodes = new List<Node> { E, H, G };
         endNode = potentialEndNodes[Random.Range(0, potentialEndNodes.Count)];
-        endNode.SetColor(Color.green);
+		GameObject.Find("Destination").GetComponent<TMP_Text>().text = "Target: " + endNode.GetLabel();
 
 
         this.removeRandomPaths();

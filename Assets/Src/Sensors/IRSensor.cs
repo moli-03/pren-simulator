@@ -13,8 +13,8 @@ public class IRSensor : MonoBehaviour
 		this.lineRenderer.receiveShadows = false;
 		this.lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 		this.lineRenderer.useWorldSpace = true;
-        this.lineRenderer.startWidth = 0.008f;
-        this.lineRenderer.endWidth = 0.008f;
+        this.lineRenderer.startWidth = 0.004f;
+        this.lineRenderer.endWidth = 0.004f;
         this.lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
         this.lineRenderer.startColor = Color.red;
         this.lineRenderer.endColor = Color.red;

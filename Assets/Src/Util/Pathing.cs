@@ -21,6 +21,17 @@ namespace Assets.Src.Util {
 		public static Vector3 ToWorldPosition(Vector2 position) {
 			return VehicleController.Instance.Drive.InitialWorldPosition + Vec2ToVec3(position);
 		}
+
+		public static Vector2 ApplyVehicleRotation(Vector2 vector) {
+
+			float cos = Mathf.Cos(VehicleController.Instance.Drive.Orientation);
+			float sin = Mathf.Sin(VehicleController.Instance.Drive.Orientation);
+
+			float newX = vector.x * cos - vector.y * sin;
+			float newY = vector.x * sin + vector.y * cos;
+
+			return new Vector2(newX, newY);
+		}
 	}
 
 }

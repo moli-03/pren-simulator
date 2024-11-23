@@ -26,7 +26,7 @@ namespace Assets.Src.Vehicle.Graph {
 
 		public void AddOutgoingPath(Vector2 direction) {
 			MapPath outgoingPath = new MapPath();
-			outgoingPath.Direction = direction.normalized;
+			outgoingPath.Direction = direction.normalized * 0.3f;
 			outgoingPath.Start = this;
 			this.OutgoingPaths.Add(outgoingPath);
 

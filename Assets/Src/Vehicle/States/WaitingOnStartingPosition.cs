@@ -5,6 +5,7 @@ namespace Assets.Src.Vehicle.States {
 
 	public class WaitingOnStartingPosition : VehicleState
 	{
+		public override string Name => "WaitingOnStartingPosition";
 
 		public WaitingOnStartingPosition(VehicleController vehicle) : base(vehicle) { }
 

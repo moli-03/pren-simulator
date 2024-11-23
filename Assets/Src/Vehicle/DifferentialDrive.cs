@@ -18,7 +18,7 @@ public class DifferentialDrive : MonoBehaviour
 	public Vector3 CalculatedWorldPosition => Pathing.Vec2ToVec3(this.Position) + this.InitialWorldPosition;
 	public Vector2 Forward => new Vector2(Mathf.Sin(this.Orientation), Mathf.Cos(this.Orientation)).normalized;
 	public Vector2 Position { get; private set; } = Vector2.zero;
-	public float Orientation { get; private set; } = 0;
+	public float Orientation { get; private set; } = 0; // In rad
 	public float CalculatedWorldOrientation => NormalizeAngle(this.InitialWorldRotation + this.Orientation);
 
 	private delegate void OnUpdateCallback();
@@ -85,6 +85,11 @@ public class DifferentialDrive : MonoBehaviour
 	public void Stop() {
 		this.SetLeftWheelSpeedPercent(0);
 		this.SetRightWheelSpeedPercent(0);
+	}
+
+	public void StopAndCancelAction() {
+		this.Stop();
+		this.OnUpdate = null;
 	}
 
 	public void TurnDeg(float deg, Action done) {
@@ -169,7 +174,7 @@ public class DifferentialDrive : MonoBehaviour
 	}
 
 
-    void FixedUpdate()
+    void Update()
     {
     	float v = this.GetForwardLinearVelocityMps();
     	float w = -this.GetAngularVelocityMps();
