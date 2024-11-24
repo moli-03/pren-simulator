@@ -1,8 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using Assets.Src.Util;
 using Assets.Src.Vehicle.Graph;
 using UnityEngine;
@@ -26,14 +23,15 @@ namespace Assets.Src.Vehicle.States {
 
 
 		public FindPathsOfNode(VehicleController vehicle) : base(vehicle) {
+			this.CurrentNode = this.Vehicle.NodeStack.Last();
+		}
 
-			this.CurrentNode = this.Vehicle.NodeHistory.Last();
-
+		public override void Start()
+		{
 			// Check if we have already scanned the outgoing paths for that node
 			if (this.CurrentNode.OutgoingPathsScanned) {
 
-				// If so, directly choose the next path
-				this.ChooseNextPath();
+				this.Vehicle.SetState(new ChooseNextPath(this.Vehicle));
 				return;
 			}
 
@@ -66,6 +64,8 @@ namespace Assets.Src.Vehicle.States {
 			});
 
 			this.CurrentNode.OutgoingPathsScanned = true;
+
+			this.CurrentNode.UpdatePathMapping();
 		}
 
 
@@ -78,25 +78,12 @@ namespace Assets.Src.Vehicle.States {
 				// Add the found paths to the node
 				this.AddPaths();
 
-				this.ChooseNextPath();
+				// Update minimap
+				Minimap.Instance.UpdateMap();
+
+				this.Vehicle.SetState(new ChooseNextPath(this.Vehicle));
 			});
 		}
-
-		private void ChooseNextPath() {
-
-			// TODO: Dont chose randomly
-			int index = (new System.Random()).Next(0, this.CurrentNode.OutgoingPathScanPositions.Count - 1);
-			Vector2 chosenPosition = this.CurrentNode.OutgoingPathScanPositions[index];
-
-			// Turn to that line
-			this.Vehicle.Drive.RotateFacing(chosenPosition - this.Vehicle.Position, () => {
-				
-				// Start to follow that line
-				this.Vehicle.SetState(new FollowLine(this.Vehicle, this.CurrentNode));
-			});
-			return;
-		}
-
 
 		public override void Update()
 		{

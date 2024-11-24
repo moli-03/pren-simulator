@@ -13,6 +13,10 @@ namespace Assets.Src.Vehicle.States
             this.Vehicle = vehicle;
         }
 
+		public virtual void Start() {
+
+		}
+
         public virtual void Update() {
 
 		}

@@ -5,11 +5,11 @@ namespace Assets.Src.Vehicle.Graph {
 
 	public class MapPath {
 
-		public bool IsVisited = false;
 		public bool HasBarrier = false;
 		public MapNode Start = null;
+		public Vector2? StartOutgoingPathPosition = null;
 		public MapNode End = null;
-		public Vector2 Direction = Vector3.zero;
+		public Vector2? EndOutgoingPathPosition = null;
 		public float Length => (End.Position - Start.Position).magnitude;
 
 		public LineRenderer lineRenderer;
@@ -18,9 +18,9 @@ namespace Assets.Src.Vehicle.Graph {
 
 			Vector3 start = Pathing.ToWorldPosition(this.Start.Position);
 			start.y = 0.05f;
-			Vector3 end = Pathing.Vec2ToVec3(this.Direction);
-			end.y = 0.05f;
-			Draw.DrawLine(start, end);
+			Vector3 direction = Pathing.ToWorldPosition(this.End.Position - this.Start.Position);
+			direction.y = 0.05f;
+			Draw.DrawLine(start, direction);
 
 		}
 	}

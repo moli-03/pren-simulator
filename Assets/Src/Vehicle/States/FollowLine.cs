@@ -11,18 +11,16 @@ namespace Assets.Src.Vehicle.States {
 
 		private float MinDistance = 0.3f;
 		private Vector2 StartingPosition;
-		private MapNode StartingNode;
 		private float DefaultRpm;
 		private bool Adjusting = false;
 		private Vector2? FrontSensorsFirstHitAt = null;
 		private Vector2? TargetPosition = null;
 
-		public FollowLine(VehicleController vehicle, MapNode startNode) : base(vehicle)
+		public FollowLine(VehicleController vehicle) : base(vehicle)
 		{
 			this.StartingPosition = this.Vehicle.Position;
-			this.Vehicle.Drive.DriveForwardPercent(0.6f);
+			this.Vehicle.Drive.DriveForwardPercent(0.7f);
 			this.DefaultRpm = this.Vehicle.Drive.LeftWheelRpm;
-			this.StartingNode = startNode;
 		}
 
 		private void HandleLineFollowing() {
@@ -131,22 +129,8 @@ namespace Assets.Src.Vehicle.States {
 					float distanceToTarget = (this.TargetPosition.Value - this.Vehicle.Position).magnitude;
 
 					if (distanceToTarget <= 0.007f) { // 7mm tolerance
-					
-						// Check if we have already found a node on that position
-						MapNode node = this.Vehicle.Map.GetNodeAt(this.Vehicle.Position);
 
-						if (node != null) {
-
-							// Add the already visited node to the history
-							this.Vehicle.NodeHistory.Add(node);
-						}
-						else {
-
-							// Add the new node to the map
-							this.Vehicle.StoreNode(this.Vehicle.Position);
-						}
-
-						this.Vehicle.SetState(new FindPathsOfNode(this.Vehicle));
+						this.Vehicle.SetState(new NodeReached(this.Vehicle));
 						return;
 					}
 				}

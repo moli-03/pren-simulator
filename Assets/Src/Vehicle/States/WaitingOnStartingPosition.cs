@@ -14,11 +14,9 @@ namespace Assets.Src.Vehicle.States {
 
 			if (Input.GetKeyDown(KeyCode.Return)) {
 
-				// Store the first node
-				this.Vehicle.StoreNode(this.Vehicle.Position);
+				UIController.Instance.StartTimer();
 
-				// New state is searching for paths to find the entrance to the graph
-				this.Vehicle.SetState(new FindPathsOfNode(this.Vehicle));
+				this.Vehicle.SetState(new NodeReached(this.Vehicle));
 			}
 			
 		}

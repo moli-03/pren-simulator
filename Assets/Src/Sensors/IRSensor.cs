@@ -73,6 +73,10 @@ public class IRSensor : MonoBehaviour
             pixelUV.x *= texture.width;
             pixelUV.y *= texture.height;
 
+			if (!texture.isReadable) {
+				return 0f;
+			}
+
             // Get the color at the pixel coordinates
             color = texture.GetPixel((int)pixelUV.x, (int)pixelUV.y);
         }

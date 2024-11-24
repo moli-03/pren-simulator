@@ -116,7 +116,7 @@ public class Map : MonoBehaviour
 
         List<Node> potentialEndNodes = new List<Node> { E, H, G };
         endNode = potentialEndNodes[Random.Range(0, potentialEndNodes.Count)];
-		GameObject.Find("Destination").GetComponent<TMP_Text>().text = "Target: " + endNode.GetLabel();
+		UIController.Instance.UpdateTarget(endNode);
 
 
         this.removeRandomPaths();
@@ -139,15 +139,17 @@ public class Map : MonoBehaviour
         {
             if (Physics.Raycast(this.MainCamera.ScreenPointToRay(Input.mousePosition), out RaycastHit initialHit, Mathf.Infinity, this.GraphLayer))
             {
-                // Mark as selected
-                initialHit.collider.GetComponent<Renderer>().material.color = Color.cyan;
+				if (initialHit.collider.TryGetComponent(out Node node)) {
+                	// Mark as selected
+                	initialHit.collider.GetComponent<Renderer>().material.color = Color.cyan;
 
-                // Store drag info
-                this.CurrentDrag = new DragInfo()
-                {
-                    Target = initialHit.collider.gameObject.GetComponent<Node>(),
-                    IsDragging = true
-                };
+                	// Store drag info
+                	this.CurrentDrag = new DragInfo()
+                	{
+                    	Target = initialHit.collider.gameObject.GetComponent<Node>(),
+                    	IsDragging = true
+                	};
+				}
             }
         }
 

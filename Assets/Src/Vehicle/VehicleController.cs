@@ -16,8 +16,8 @@ public class VehicleController : MonoBehaviour
 	public VehicleMap Map { get; private set; }
 
 	[HideInInspector]
-	public List<MapNode> NodeHistory = new List<MapNode>();
-	
+	public List<MapNode> NodeStack = new List<MapNode>();
+
 	[HideInInspector]
 	public DifferentialDrive Drive;
 
@@ -32,16 +32,12 @@ public class VehicleController : MonoBehaviour
 	public void SetState(VehicleState state) {
 		this.State = state;
 
-		this.StateLabel.text = "State: " + state.Name;
-	}
+		UIController.Instance.UpdateState(state);
 
 
-	public MapNode StoreNode(Vector2 nodeWorldPosition) {
-		MapNode node = this.Map.AddNodeAt(nodeWorldPosition);
-		this.NodeHistory.Add(node);
-		return node;
+		this.State.Start();
 	}
-	
+
 
     // Start is called before the first frame update
     void Start()
@@ -52,6 +48,8 @@ public class VehicleController : MonoBehaviour
 		this.Map = new VehicleMap();
         this.SetState(new WaitingOnStartingPosition(this));
 		this.SensorBoard = this.GetComponentInChildren<LineSensorBoard>();
+		Minimap.Instance.Vehicle = this;
+		Minimap.Instance.SetStartingPosition(this.transform.position);
     }
 
     void FixedUpdate()
