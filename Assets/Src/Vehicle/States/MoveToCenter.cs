@@ -10,11 +10,11 @@ namespace Assets.Src.Vehicle.States {
 	{
 		public override string Name => "MoveToCenter";
 
-		private bool TurnedMinDistance = false;
-		private Vector2? CurrentAdjustmentDirection = null;
+		private bool FinishedTurning = false;
+		private Vector2 AccumulatedAdjustmentDirection = Vector2.zero;
 		private Vector2? PositionBeforeAdjustment = null;
 		private bool TurnedToAdjustmentDirection = false;
-		private float MaxAdjustmentDirection = 0.05f;
+		private bool StartedTurningToAdjustmentDirection = false;
 
 		struct AdjustmentDirection {
 			public IRSensor sensor;
@@ -48,14 +48,11 @@ namespace Assets.Src.Vehicle.States {
 		private void StartSearchingForCenter() {
 
 			// Reset everything
-			this.CurrentAdjustmentDirection = null;
 			this.PositionBeforeAdjustment = null;
 			this.TurnedToAdjustmentDirection = false;
-			this.TurnedMinDistance = false;
 
-			// Turn 90 deg and check if at any point we were not on the line with any sensor
 			this.Vehicle.Drive.TurnDeg(90f, () => {
-				this.TurnedMinDistance = true;
+				this.FinishedTurning = true;
 			});
 		}
 
@@ -84,16 +81,16 @@ namespace Assets.Src.Vehicle.States {
 		{
 
 			// Handle moving to the middle of the node if a ir sensor is off the node
-			if (this.CurrentAdjustmentDirection.HasValue) {
+			if (this.FinishedTurning && this.AccumulatedAdjustmentDirection != Vector2.zero) {
 				this.HandleAdjustment();
 			}
 
 			// Handle moving the 90 deg
-			else if (!this.TurnedMinDistance) {
+			else if (!this.FinishedTurning) {
 				this.HandleCenterChecking();
 			}
 
-			// Turned the 90 deg and we were always on the node :)
+			// Turned the 90 deg and we were always on the node, yeyyy, nothing to do :)
 			else {
 				this.NextState();
 			}
@@ -103,19 +100,21 @@ namespace Assets.Src.Vehicle.States {
 
 		private void HandleAdjustment() {
 
-			// Wait until we are fully turned to direction we want to correct to
-			if (!this.TurnedToAdjustmentDirection) {
-				return;
+			if (!this.StartedTurningToAdjustmentDirection) {
+				this.TurnedToAdjustmentDirection = false;
+				this.PositionBeforeAdjustment = this.Vehicle.Position;
+
+				// Rotate to that direction
+				this.Vehicle.Drive.RotateFacing(this.AccumulatedAdjustmentDirection, () => {
+					this.TurnedToAdjustmentDirection = true;
+
+					// Start moving forward slowly
+					this.Vehicle.Drive.DriveForwardPercent(0.1f);
+				});
 			}
 
-			// Check if we have already moved for the max adjustment distance
-			if ((this.Vehicle.Position - this.PositionBeforeAdjustment.Value).magnitude >= this.MaxAdjustmentDirection) {
-				this.CurrentAdjustmentDirection = null;
-				this.PositionBeforeAdjustment = null;
-				this.Vehicle.Drive.Stop();
-
-				// Do the same again
-				this.StartSearchingForCenter();
+			// Wait until we are fully turned to direction we want to correct to
+			if (!this.TurnedToAdjustmentDirection) {
 				return;
 			}
 
@@ -123,8 +122,6 @@ namespace Assets.Src.Vehicle.States {
 			if (this.AdjustmentDirections.All(adjustmentDirection => Pathing.IsOnLine(adjustmentDirection.sensor))) {
 
 				// Pretty much at the center now
-				this.CurrentAdjustmentDirection = null;
-				this.PositionBeforeAdjustment = null;
 				this.Vehicle.Drive.Stop();
 
 				this.NextState();
@@ -135,34 +132,13 @@ namespace Assets.Src.Vehicle.States {
 
 		private void HandleCenterChecking() {
 
-			Vector2 addedDirection = Vector2.zero;
-
+			// Accumulate the direction we have to drive toward to get to the center
 			foreach (AdjustmentDirection adjustment in this.AdjustmentDirections) {
 				if (!Pathing.IsOnLine(adjustment.sensor)) {
-					addedDirection += adjustment.adjustmentDirection;
+					this.AccumulatedAdjustmentDirection += Pathing.ApplyVehicleRotation(adjustment.adjustmentDirection);
 				}
 			}
 
-			// No Adjustment needed?
-			if (addedDirection == Vector2.zero) {
-				return;
-			}
-
-			// Adjustment needed
-			this.Vehicle.Drive.StopAndCancelAction();
-
-			// Calculate the direction we have to face
-			this.TurnedToAdjustmentDirection = false;
-			this.CurrentAdjustmentDirection = Pathing.ApplyVehicleRotation(addedDirection);
-			this.PositionBeforeAdjustment = this.Vehicle.Position;
-
-			// Rotate to that direction
-			this.Vehicle.Drive.RotateFacing(this.CurrentAdjustmentDirection.Value, () => {
-				this.TurnedToAdjustmentDirection = true;
-
-				// Start moving forward slowly
-				this.Vehicle.Drive.DriveForwardPercent(0.1f);
-			});
 		}
 	}
 

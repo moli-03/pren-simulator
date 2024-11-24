@@ -181,7 +181,6 @@ public class DifferentialDrive : MonoBehaviour
 
     	// Update orientation with the angular velocity
     	float deltaOrientation = w * Time.deltaTime;
-		// Debug.Log("W: " + w + ", delta: " + deltaOrientation);
     	this.Orientation = NormalizeAngle(this.Orientation + deltaOrientation);
 
     	// Update position

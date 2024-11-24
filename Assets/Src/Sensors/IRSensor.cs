@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using Assets.Src.Util;
 using UnityEngine;
 
 public class IRSensor : MonoBehaviour
@@ -36,6 +37,8 @@ public class IRSensor : MonoBehaviour
         	Vector3 end = hitSomething ? hit.point : transform.position + this.transform.forward * this.RayMaxDistance;
         	lineRenderer.SetPosition(0, start);
         	lineRenderer.SetPosition(1, end);
+
+			this.GetComponent<Renderer>().material.color = Pathing.IsOnLine(this) ? Color.green : Color.black;
 		}
 	}
 

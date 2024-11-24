@@ -38,7 +38,7 @@ namespace Assets.Src.Vehicle.States {
 			}
 
 			// Check if the front middle sensor is on the line
-			if (Pathing.IsOnLine(this.Vehicle.SensorBoard.LineFollowSensors[1])) {
+			if (Pathing.IsOnLine(this.Vehicle.SensorBoard.PathDetectionSensor)) {
 
 				this.StartedOnLine = true;
 				// Start slowly rotating left
@@ -60,9 +60,8 @@ namespace Assets.Src.Vehicle.States {
 
 				// Figure out the middle of the line
 				Vector2 middle = edgePoint.Left + 0.5f * (edgePoint.Right - edgePoint.Left);
-				Vector2 direction = middle - this.CurrentNode.Position;
 
-				this.CurrentNode.AddOutgoingPath(direction);
+				this.CurrentNode.AddOutgoingPathPosition(middle);
 
 			});
 
@@ -86,14 +85,14 @@ namespace Assets.Src.Vehicle.States {
 		private void ChooseNextPath() {
 
 			// TODO: Dont chose randomly
-			int index = (new System.Random()).Next(0, this.CurrentNode.OutgoingPaths.Count - 1);
-			MapPath chosenPath = this.CurrentNode.OutgoingPaths[index];
+			int index = (new System.Random()).Next(0, this.CurrentNode.OutgoingPathScanPositions.Count - 1);
+			Vector2 chosenPosition = this.CurrentNode.OutgoingPathScanPositions[index];
 
 			// Turn to that line
-			this.Vehicle.Drive.RotateFacing(chosenPath.Direction, () => {
+			this.Vehicle.Drive.RotateFacing(chosenPosition - this.Vehicle.Position, () => {
 				
 				// Start to follow that line
-				this.Vehicle.SetState(new FollowLine(this.Vehicle, this.CurrentNode, chosenPath));
+				this.Vehicle.SetState(new FollowLine(this.Vehicle, this.CurrentNode));
 			});
 			return;
 		}
@@ -101,6 +100,10 @@ namespace Assets.Src.Vehicle.States {
 
 		public override void Update()
 		{
+			if (this.CurrentNode.OutgoingPathsScanned) {
+				return;
+			}
+
 			bool isFrontSensorOnLine = Pathing.IsOnLine(this.Vehicle.SensorBoard.PathDetectionSensor);
 
 			// Handle rotating until no longer on a line
@@ -129,10 +132,6 @@ namespace Assets.Src.Vehicle.States {
 
 				this.LinePreviouslyHovered = true;
 
-				Vector3 position = Pathing.ToWorldPosition(this.Vehicle.Position + this.Vehicle.Forward * this.Vehicle.SensorBoard.PathDetectionSensorDistanceFromCenter);
-				position.y = 0.01f;
-				Draw.DrawCircle(position, Color.green);
-
 				// Initially store the position
 				this.EdgePoints.Add(new LineEdgePoints() {
 					Left = this.Vehicle.Position + this.Vehicle.Forward * this.Vehicle.SensorBoard.PathDetectionSensorDistanceFromCenter
@@ -150,10 +149,6 @@ namespace Assets.Src.Vehicle.States {
 					currentEdgePoint.Right = this.Vehicle.Position + this.Vehicle.Forward * this.Vehicle.SensorBoard.PathDetectionSensorDistanceFromCenter;
 					this.EdgePoints[this.EdgePoints.Count - 1] = currentEdgePoint;
 					this.LinePreviouslyHovered = false;
-
-					Vector3 position = Pathing.ToWorldPosition(this.Vehicle.Position + this.Vehicle.Forward * this.Vehicle.SensorBoard.PathDetectionSensorDistanceFromCenter);
-					position.y = 0.01f;
-					Draw.DrawCircle(position, Color.magenta);
 				}
 			}
 		}

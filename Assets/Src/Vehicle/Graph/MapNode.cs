@@ -9,6 +9,8 @@ namespace Assets.Src.Vehicle.Graph {
 		// The position of the node
 		public Vector2 Position { get; }
 
+		public List<Vector2> OutgoingPathScanPositions = new List<Vector2>();
+
 		// The directions of the outgoing paths
 		public List<MapPath> OutgoingPaths = new List<MapPath>();
 
@@ -20,22 +22,18 @@ namespace Assets.Src.Vehicle.Graph {
 			this.Position = position;
 
 			Vector3 circlePos = Pathing.ToWorldPosition(this.Position);
-			circlePos.y = 0.05f;
+			circlePos.y = 0.01f;
 			Draw.DrawCircle(circlePos, Color.cyan);
 		}
 
-		public void AddOutgoingPath(Vector2 direction) {
-			MapPath outgoingPath = new MapPath();
-			outgoingPath.Direction = direction.normalized * 0.3f;
-			outgoingPath.Start = this;
-			this.OutgoingPaths.Add(outgoingPath);
+		public void AddOutgoingPathPosition(Vector2 position) {
+			this.OutgoingPathScanPositions.Add(position);
 
-			outgoingPath.DrawDebugLines();
+			Vector3 positionVec3 = Pathing.ToWorldPosition(position);
+			positionVec3.y = 0.01f;
+			Draw.DrawCircle(positionVec3, Color.magenta);
 		}
 
-		public void AddOutgoingPath(MapPath path) {
-			this.OutgoingPaths.Add(path);
-		}
 	}
 
 }

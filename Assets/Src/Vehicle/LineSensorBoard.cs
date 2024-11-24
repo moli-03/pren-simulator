@@ -14,13 +14,16 @@ public class LineSensorBoard : MonoBehaviour {
 
 	// The sensors used to follow the line
 	[HideInInspector]
-	public IRSensor[] LineFollowSensors { get; private set; } = new IRSensor[3];
+	public IRSensor[] FrontLineFollowSensors { get; private set; } = new IRSensor[5];
 
 	[HideInInspector]
-	public float LineFollowSensorDistanceFromCenter { get; private set; } = 0.06f;
+	public float FrontLineFollowSensorDistanceFromCenter { get; private set; } = 0.06f;
 
 	[HideInInspector]
-	public float LineFollowSensorGap { get; private set; } = Constants.PATH_WIDTH * 3 / 4;
+	public float FrontLineFollowSensorGap { get; private set; } = Constants.PATH_WIDTH * 3 / 4;
+	
+	[HideInInspector]
+	public float FrontLineFollowSensorOuterGap { get; private set; } = 0.005f;
 
 
 	// Horizontal sensors in the middle of the vehicle [top, bottom]
@@ -73,9 +76,12 @@ public class LineSensorBoard : MonoBehaviour {
 		this.PathDetectionSensor = CreateIRSensorGameObject(new Vector3(0, 0, this.PathDetectionSensorDistanceFromCenter));
 
 		// Create the front sensors
-		this.LineFollowSensors[0] = CreateIRSensorGameObject(new Vector3(-this.LineFollowSensorGap, 0, this.LineFollowSensorDistanceFromCenter));
-		this.LineFollowSensors[1] = CreateIRSensorGameObject(new Vector3(0, 0, this.LineFollowSensorDistanceFromCenter));
-		this.LineFollowSensors[2] = CreateIRSensorGameObject(new Vector3(this.LineFollowSensorGap, 0, this.LineFollowSensorDistanceFromCenter));
+		this.FrontLineFollowSensors[0] = CreateIRSensorGameObject(new Vector3(-this.FrontLineFollowSensorGap - this.FrontLineFollowSensorOuterGap, 0, this.FrontLineFollowSensorDistanceFromCenter));
+		this.FrontLineFollowSensors[1] = CreateIRSensorGameObject(new Vector3(-this.FrontLineFollowSensorGap, 0, this.FrontLineFollowSensorDistanceFromCenter));
+		this.FrontLineFollowSensors[2] = CreateIRSensorGameObject(new Vector3(0, 0, this.FrontLineFollowSensorDistanceFromCenter));
+		this.FrontLineFollowSensors[3] = CreateIRSensorGameObject(new Vector3(this.FrontLineFollowSensorGap, 0, this.FrontLineFollowSensorDistanceFromCenter));
+		this.FrontLineFollowSensors[4] = CreateIRSensorGameObject(new Vector3(this.FrontLineFollowSensorGap + this.FrontLineFollowSensorOuterGap, 0, this.FrontLineFollowSensorDistanceFromCenter));
+
 
 		// Create the middle sensor
 		this.MiddleSensor = CreateIRSensorGameObject(Vector3.zero);
@@ -102,10 +108,10 @@ public class LineSensorBoard : MonoBehaviour {
 
 	void ShowDebugLines() {
 
-		foreach (IRSensor sensor in this.LineFollowSensors) {
+		foreach (IRSensor sensor in this.FrontLineFollowSensors) {
 			sensor.DrawDebugLine();
 		}
-
+		
 		foreach (IRSensor sensor in this.HorizontalSensors) {
 			sensor.DrawDebugLine();
 		}
@@ -113,6 +119,12 @@ public class LineSensorBoard : MonoBehaviour {
 		foreach (IRSensor sensor in this.VerticalSensors) {
 			sensor.DrawDebugLine();
 		}
+
+		foreach (IRSensor sensor in this.DiagonalSensors) {
+			sensor.DrawDebugLine();
+		}
+
+		this.MiddleSensor.DrawDebugLine();
 	}
 
 
