@@ -17,26 +17,14 @@ namespace Assets.Src.Vehicle.States {
 		}
 
 
-		private List<Vector2> GetNotVisitedPositions() {
-
-			// Get all the directions we have already visited
-			List<Vector2> visitedDirections = new List<Vector2>();
-			foreach (MapPath path in this.CurrentNode.OutgoingPaths) {
-				Vector2? position = path.Start == this.CurrentNode ? path.StartOutgoingPathPosition : path.EndOutgoingPathPosition;
-
-				if (position.HasValue) {
-					visitedDirections.Add(position.Value);
-				}
-			}
-
-			// Get the positions we have not visited yet
-			return this.CurrentNode.OutgoingPathScanPositions.Where(position => !visitedDirections.Contains(position)).ToList();
+		private List<MapPath> GetNotVisitedPaths() {
+			return this.CurrentNode.OutgoingPaths.Where(path => !path.IsVisited).ToList();
 		}
 
 		public override void Start()
 		{
 
-			List<Vector2> notVisitedPositions = this.GetNotVisitedPositions();
+			List<MapPath> notVisitedPaths = this.GetNotVisitedPaths();
 
 			// Handle start node
 			if (this.Vehicle.NodeStack.Count == 1) {
@@ -47,7 +35,7 @@ namespace Assets.Src.Vehicle.States {
 			// Handle first node of the graph
 			else if (this.Vehicle.NodeStack.Count == 2) {
 				Debug.Log("FirstNode");
-				this.HandleFirstNodeOfGraph(notVisitedPositions);
+				this.HandleFirstNodeOfGraph(notVisitedPaths);
 			}
 
 			// Check if we have visited this node -> turn around
@@ -57,15 +45,15 @@ namespace Assets.Src.Vehicle.States {
 			}
 
 			// Check if we have visited all paths of this node
-			else if (notVisitedPositions.Count == 0) {
+			else if (notVisitedPaths.Count == 0) {
 				Debug.Log("NoOtherOptions");
 				this.GoBack();
 			}
 
 			// Randomly choose the next path
 			else {
-				Debug.Log("Random from " + notVisitedPositions.Count + " possible positions");
-				this.ChoseRandomPosition(notVisitedPositions);
+				Debug.Log("Random from " + notVisitedPaths.Count + " possible positions");
+				this.ChoseRandomPath(notVisitedPaths);
 			}
 
 		}
@@ -80,32 +68,32 @@ namespace Assets.Src.Vehicle.States {
 		}
 
 
-		private void ChoseRandomPosition(List<Vector2> linePositions) {
+		private void ChoseRandomPath(List<MapPath> paths) {
 
 			// Randomly select one of the not visited nodes
-			int index = (new System.Random()).Next(0, linePositions.Count - 1);
+			int index = Random.Range(0, paths.Count);
 			
-			this.ChoosePosition(linePositions[index]);
+			this.ChoosePosition(paths[index].GetOutgoingPositionFor(this.CurrentNode).Value);
 		}
 
 
 		private void HandleStartNode() {
 
 			// There is only one way to go -> choose it
-			this.ChoosePosition(this.CurrentNode.OutgoingPathScanPositions[0]);
+			this.ChoosePosition(this.CurrentNode.OutgoingPaths[0].GetOutgoingPositionFor(this.CurrentNode).Value);
 		}
 
 
-		private void HandleFirstNodeOfGraph(List<Vector2> notVisitedPositions) {
+		private void HandleFirstNodeOfGraph(List<MapPath> notVisitedPaths) {
 
 			// Check if we have explored everything
-			if (notVisitedPositions.Count == 0) {
+			if (notVisitedPaths.Count == 0) {
 				this.Vehicle.SetState(new ExploredEverything(this.Vehicle));
 				return;
 			}
 
 			// Randomly choose the next one
-			this.ChoseRandomPosition(notVisitedPositions);
+			this.ChoseRandomPath(notVisitedPaths);
 		}
 
 

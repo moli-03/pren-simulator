@@ -9,6 +9,8 @@ public class IRSensor : MonoBehaviour
 	private LineRenderer lineRenderer;
 	private bool drawDebugLine = false;
 
+	private LayerMask GraphLayer;
+
 	void Start() {
 		this.lineRenderer = this.gameObject.AddComponent<LineRenderer>();
 		this.lineRenderer.receiveShadows = false;
@@ -19,6 +21,7 @@ public class IRSensor : MonoBehaviour
         this.lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
         this.lineRenderer.startColor = Color.red;
         this.lineRenderer.endColor = Color.red;
+		this.GraphLayer = 1 << LayerMask.NameToLayer("Graph");
 	}
 
 	public void DrawDebugLine() {
@@ -50,7 +53,7 @@ public class IRSensor : MonoBehaviour
         // Define the direction of the ray, which is along the object's local Z-axis
         Vector3 direction = transform.forward;
 
-        if (!Physics.Raycast(origin, direction, out RaycastHit hit, RayMaxDistance))
+        if (!Physics.Raycast(origin, direction, out RaycastHit hit, RayMaxDistance, GraphLayer))
         {
             return 0;
         }

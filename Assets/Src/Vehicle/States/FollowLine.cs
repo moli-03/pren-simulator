@@ -1,6 +1,8 @@
 using System.Linq;
+using System.Threading;
 using Assets.Src.Util;
 using Assets.Src.Vehicle.Graph;
+using Assets.Src.Vehicle.States.Barrier;
 using UnityEngine;
 
 namespace Assets.Src.Vehicle.States {
@@ -11,99 +13,64 @@ namespace Assets.Src.Vehicle.States {
 
 		private float MinDistance = 0.3f;
 		private Vector2 StartingPosition;
-		private float DefaultRpm;
-		private bool Adjusting = false;
 		private Vector2? FrontSensorsFirstHitAt = null;
 		private Vector2? TargetPosition = null;
+		private float MinDistanceToObstacleBeforeRecognition = 0.15f;
 
 		public FollowLine(VehicleController vehicle) : base(vehicle)
 		{
 			this.StartingPosition = this.Vehicle.Position;
-			this.Vehicle.Drive.DriveForwardPercent(0.7f);
-			this.DefaultRpm = this.Vehicle.Drive.LeftWheelRpm;
+			this.Vehicle.LineFollower.Enable();
+			this.Vehicle.LineFollower.SetSpeed(0.5f);
 		}
 
-		private void HandleLineFollowing() {
 
-			// Handle stopping of adjusting
-			if (this.Adjusting) {
+		private void HandleObstacleRecognition() {
 
-				// Check if only the middle sensor is on the line
-				if (
-					!Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontLineFollowSensors[1]) // Left not
-					&& 
-					Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontLineFollowSensors[2]) // Middle yes
-					&&
-					!Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontLineFollowSensors[3]) // Right not
-				) {
+			// Check if the bottom sensor found something
+			float bottomSensorDistance = this.Vehicle.BottomDistanceSensor.GetDistance();
 
-					// Stop adjusting
-					this.Vehicle.Drive.SetLeftWheelRpm(this.DefaultRpm);
-					this.Vehicle.Drive.SetRightWheelRpm(this.DefaultRpm);
-					this.Adjusting = false;
-				}
-
+			//  Nope
+			if (bottomSensorDistance == -1) {
+				return;
 			}
 
-			// Check if the right line follow sensor is on the line
-			if (!this.Adjusting && Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontLineFollowSensors[3])) {
-
-				// If the outer right sensor is on the line its because we hit another line
-				if (Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontLineFollowSensors[4])) {
-					return;
-				}
-
-				this.Adjusting = true;
-
-				// If the middle sensor is not on the line we have to drastically adjust
-				if (!Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontLineFollowSensors[2])) {
-
-					// Only need to adjust drastically
-					this.Vehicle.Drive.SetLeftWheelRpm(this.DefaultRpm + 150);
-					this.Vehicle.Drive.SetRightWheelRpm(this.DefaultRpm - 50);
-				}
-				else {
-					// Only need to adjust slightly
-					this.Vehicle.Drive.SetLeftWheelRpm(this.DefaultRpm + 50);
-					this.Vehicle.Drive.SetRightWheelRpm(this.DefaultRpm);
-				}
-
+			// Drive towards the obstacle until its closer
+			if (bottomSensorDistance > this.MinDistanceToObstacleBeforeRecognition) {
+				return;
 			}
 
-			// Check if the left line follow sensor is on the line
-			if (!this.Adjusting && Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontLineFollowSensors[1])) {
+			// Get the top sensor distance
+			float topSensorDistance = this.Vehicle.TopDistanceSensor.GetDistance();
 
-				// If the outer left sensor is on the line its because we hit another line
-				if (Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontLineFollowSensors[0])) {
-					return;
-				}
+			float topSensorDistanceX = Mathf.Cos(this.Vehicle.TopDistanceSensor.transform.rotation.eulerAngles.x * Mathf.Deg2Rad) * topSensorDistance;
 
-				
-				this.Adjusting = true;
+			// If both the top and bottom sensor are roughly the same distance away
+			if (Mathf.Abs(topSensorDistanceX - bottomSensorDistance) <= Constants.CONE_RADIUS_AT_BOTTOM_SENSOR_HEIGHT) {
 
-				// If the middle sensor is not on the line we have to drastically adjust
-				if (!Pathing.IsOnLine(this.Vehicle.SensorBoard.FrontLineFollowSensors[2])) {
+				// Stop
+				this.Vehicle.LineFollower.Disable();
+				this.Vehicle.Drive.Stop();
 
-					// Only need to adjust drastically
-					this.Vehicle.Drive.SetRightWheelRpm(this.DefaultRpm + 150);
-					this.Vehicle.Drive.SetLeftWheelRpm(this.DefaultRpm - 50);
-				}
-				else {
+				// Next state
+				this.Vehicle.SetState(new ConeDetected(this.Vehicle, bottomSensorDistance));
+			}
+			else {
 
-					// Only need to adjust slightly
-					this.Vehicle.Drive.SetRightWheelRpm(this.DefaultRpm + 50);
-					this.Vehicle.Drive.SetLeftWheelRpm(this.DefaultRpm);
-				}
+				// Stop
+				this.Vehicle.LineFollower.Disable();
+				this.Vehicle.Drive.Stop();
 
+				// Next state
+				this.Vehicle.SetState(new BarrierDetected(this.Vehicle, bottomSensorDistance));
 			}
 		}
-
 
 		public override void Update()
 		{
 
-			// Drive for at least the min distance
-			if ((this.StartingPosition - this.Vehicle.Position).magnitude >= this.MinDistance) {
+			// Drive for at least the min distance before checking for nodes (temporarily disabled and probably forever)
+			if ((this.StartingPosition - this.Vehicle.Position).magnitude >= this.MinDistance || true) {
 
 				// Check for a first hit of the front sensors
 				if (!this.FrontSensorsFirstHitAt.HasValue) {
@@ -121,7 +88,7 @@ namespace Assets.Src.Vehicle.States {
 						this.TargetPosition = this.Vehicle.Position + this.Vehicle.Forward * distanceTraveled / 2f;
 
 						// Slowly drive forward
-						this.Vehicle.Drive.DriveForwardPercent(0.1f);
+						this.Vehicle.LineFollower.SetSpeed(0.1f);
 					}
 				}
 				else if (this.TargetPosition.HasValue) {
@@ -130,14 +97,17 @@ namespace Assets.Src.Vehicle.States {
 
 					if (distanceToTarget <= 0.007f) { // 7mm tolerance
 
+						// Stop
+						this.Vehicle.LineFollower.Disable();
+						this.Vehicle.Drive.Stop();
+
 						this.Vehicle.SetState(new NodeReached(this.Vehicle));
 						return;
 					}
 				}
 			}
 
-
-			this.HandleLineFollowing();
+			this.HandleObstacleRecognition();
 		}
 	}
 

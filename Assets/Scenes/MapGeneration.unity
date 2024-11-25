@@ -1550,7 +1550,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   NodePrefab: {fileID: 8785671950155818997, guid: 8f49717adaa420a43b10d51dd0aceb18, type: 3}
   PathPrefab: {fileID: 3513680801794347135, guid: b800d8f9ff2fd5b4d92a4fa3b104a2ad, type: 3}
-  BarrierPrefab: {fileID: 5191612431869373409, guid: d8087621f8ab43c44b83d8488f4bd4b1, type: 3}
+  BarrierPrefab: {fileID: 1190359653834564777, guid: b9c4dd4005fabda42875a5e5869baa2f, type: 3}
   ConePrefab: {fileID: 919132149155446097, guid: ac3764cf3bc84304f9ded0359922cd0c, type: 3}
   VehiclePrefab: {fileID: 6439489329973962275, guid: e2940a08d47854c42bbcf318e34fc80a, type: 3}
   GroundLayer:

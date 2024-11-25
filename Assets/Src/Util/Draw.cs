@@ -1,3 +1,4 @@
+using Unity.VisualScripting;
 using UnityEngine;
 
 namespace Assets.Src.Util {
@@ -14,12 +15,12 @@ namespace Assets.Src.Util {
 			return obj;
 		}
 
-		public static GameObject DrawLine(Vector3 origin, Vector3 direction) {
-			
+
+		public static GameObject DrawLine(Vector3 origin, Vector3 direction, Color color) {
 			var obj = new GameObject("Line");
 			var lineRenderer = obj.AddComponent<LineRenderer>();
-			lineRenderer.startColor = Color.cyan;
-			lineRenderer.endColor = Color.cyan;
+			lineRenderer.startColor = color;
+			lineRenderer.endColor = color;
 			lineRenderer.useWorldSpace = true;
         	lineRenderer.startWidth = 0.008f;
         	lineRenderer.endWidth = 0.008f;
@@ -28,6 +29,11 @@ namespace Assets.Src.Util {
 			lineRenderer.SetPosition(1, origin + direction);
 
 			return obj;
+		}
+
+
+		public static GameObject DrawLine(Vector3 origin, Vector3 direction) {
+			return DrawLine(origin, direction, Color.cyan);	
 		}
 
 	}

@@ -60,12 +60,9 @@ namespace Assets.Src.Vehicle.States {
 				Vector2 middle = edgePoint.Left + 0.5f * (edgePoint.Right - edgePoint.Left);
 
 				this.CurrentNode.AddOutgoingPathPosition(middle);
-
 			});
 
 			this.CurrentNode.OutgoingPathsScanned = true;
-
-			this.CurrentNode.UpdatePathMapping();
 		}
 
 

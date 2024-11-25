@@ -1,5 +1,6 @@
 using System.Linq;
 using Assets.Src.Vehicle.Graph;
+using UnityEngine;
 
 namespace Assets.Src.Vehicle.States {
 
@@ -30,7 +31,7 @@ namespace Assets.Src.Vehicle.States {
 			}
 
 			// Connect the two nodes
-			if (previousVisitedNode != null) {
+			if (previousVisitedNode != null && previousVisitedNode != node) {
 				this.Vehicle.Map.AddPathBetween(previousVisitedNode, node);
 			}
 

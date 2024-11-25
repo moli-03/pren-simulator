@@ -18,30 +18,37 @@ namespace Assets.Src.Vehicle.Graph {
 		}
 
 		public MapPath AddPathBetween(MapNode a, MapNode b) {
+
 			MapPath path = new MapPath();
 			path.Start = a;
 			path.End = b;
 
+			MapPath pathFromA = a.GetOutgoingPathInDirection(b.Position - a.Position);
+			MapPath pathFromB = b.GetOutgoingPathInDirection(a.Position - b.Position);
+
+			if (pathFromA != null) {
+				a.OutgoingPaths.Remove(pathFromA);
+				path.StartOutgoingPathPosition = pathFromA.GetOutgoingPositionFor(a);
+			}
+			
+			if (pathFromB != null) {
+				b.OutgoingPaths.Remove(pathFromB);
+				path.EndOutgoingPathPosition = pathFromB.GetOutgoingPositionFor(b);
+			}
+
 			a.AddOutgoingPath(path);
 			b.AddOutgoingPath(path);
-
-			a.UpdatePathMapping();
-			b.UpdatePathMapping();
 
 			Minimap.Instance.UpdateMap();
 
 			return path;
 		}
 
-		public MapNode GetNodeAt(Vector2 position, float tolerance = 0.1f) {
+		public MapNode GetNodeAt(Vector2 position, float tolerance = 0.07f) {
 
 			foreach (MapNode node in this.Nodes) {
 
-				if (
-					(Math.Abs(position.x - node.Position.x) <= tolerance)
-					&&
-					(Math.Abs(position.y - node.Position.y) <= tolerance)
-				) {
+				if ((position - node.Position).magnitude <= tolerance) {
 					return node;
 				}
 

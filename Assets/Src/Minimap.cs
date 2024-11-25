@@ -12,6 +12,7 @@ public class Minimap : MonoBehaviour
 
 	public RawImage drawingArea;  // Attach the UI panel here (RawImage component)
 	private Color BackgroundColor = new Color(0, 0, 0, 0.7f);
+	private Color ConeColor = new Color(255, 165, 0);
     private Texture2D texture;    // The texture to draw on
 	private Vector2	lastPosition = Vector2.zero;
 	private float WorldToMapRatio;	// Ratio to convert world coordinates (m) to coordinates on the texture
@@ -50,11 +51,6 @@ public class Minimap : MonoBehaviour
 
 	public void AddBarrier(Vector2 position) {
 
-	}
-
-
-	public void AddNode(Vector2 position) {
-		this.DrawCircle(position, Constants.NODE_RADIUS, Color.white);
 	}
 
 	private Vector2Int ToMapPosition(Vector2 worldPosition) {
@@ -161,18 +157,24 @@ public class Minimap : MonoBehaviour
 		foreach (MapNode node in this.Vehicle.Map.Nodes) {
 
 			// Draw all the outgoing paths
-			foreach (Vector2 position in node.OutgoingPathScanPositions){
-				Vector2 scaledPosition = node.Position + (position - node.Position).normalized * 0.3f;
-				this.DrawLine(node.Position, scaledPosition, Color.magenta);
+			foreach (MapPath path in node.OutgoingPaths){
+				Vector2? position = path.Start == node ? path.StartOutgoingPathPosition : path.EndOutgoingPathPosition;
+
+				if (position.HasValue) {
+					Vector2 scaledPosition = node.Position + (position.Value - node.Position).normalized * 0.3f;
+					this.DrawLine(node.Position, scaledPosition, Color.magenta);
+				}
 			}
 
 			// Draw the actually figured out paths
 			foreach (MapPath path in node.OutgoingPaths) {
-				this.DrawLine(path.Start.Position, path.End.Position, Color.white);
+				if (path.IsVisited) {
+					this.DrawLine(path.Start.Position, path.End.Position, Color.white);
+				}
 			}
 
 			// Draw the node itself
-			this.AddNode(node.Position);
+			this.DrawCircle(node.Position, Constants.NODE_RADIUS, node.HasCone ? this.ConeColor : Color.white);
 		}
 
 		texture.Apply();

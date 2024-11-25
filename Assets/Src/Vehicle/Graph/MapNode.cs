@@ -10,10 +10,10 @@ namespace Assets.Src.Vehicle.Graph {
 		// The position of the node
 		public Vector2 Position { get; }
 
-		public List<Vector2> OutgoingPathScanPositions = new List<Vector2>();
-
 		// The directions of the outgoing paths
 		public List<MapPath> OutgoingPaths = new List<MapPath>();
+
+		public bool HasCone = false;
 
 		public GameObject DebugObject;
 
@@ -27,6 +27,43 @@ namespace Assets.Src.Vehicle.Graph {
 			Draw.DrawCircle(circlePos, Color.cyan);
 		}
 
+		public MapPath GetOutgoingPathInDirection(Vector2 direction) {
+
+			MapPath chosenPath = null;
+			float minAngle = 4f; // Deg
+
+			foreach (MapPath path in this.OutgoingPaths) {
+
+				// First check visited direction
+				Vector2? outgoingDirection = path.GetOutgoingDirectionFor(this);
+
+				if (outgoingDirection.HasValue) {
+					float angle = Mathf.Abs(Vector2.SignedAngle(direction, outgoingDirection.Value));
+
+					if (minAngle > angle) {
+						minAngle = angle;
+						chosenPath = path;
+					}
+				}
+
+				// Check the outgoing postions alternatively
+				else {
+					Vector2? outgoingPosition = path.GetOutgoingPositionFor(this);
+
+					if (outgoingPosition.HasValue) {
+						float angle = Mathf.Abs(Vector2.SignedAngle(direction, outgoingPosition.Value - this.Position));
+
+						if (minAngle > angle) {
+							minAngle = angle;
+							chosenPath = path;
+						}
+					}
+				}
+			}
+
+			return chosenPath;
+		}
+
 		public void AddOutgoingPath(MapPath path) {
 
 			// Don't add twice
@@ -37,39 +74,28 @@ namespace Assets.Src.Vehicle.Graph {
 			this.OutgoingPaths.Add(path);
 		}
 
-		public void UpdatePathMapping() {
-			
-			foreach (MapPath path in this.OutgoingPaths) {
+		public void AddOutgoingPathPosition(Vector2 position) {
 
-				// Map the outgoing path positions to the actual path
-				bool isStart = path.Start == this;
+			// Is there already a path in that direction?
+			MapPath path = this.GetOutgoingPathInDirection(position - this.Position);
 
-				// Get the actual direction between the nodes
-				Vector2 actualDirection = isStart ? path.End.Position - path.Start.Position : path.Start.Position - path.End.Position;
-				float minAngle = 5f;
-				foreach (Vector2 outgoingPathPosition in this.OutgoingPathScanPositions) {
+			if (path == null) {
+				path = new MapPath();
+				path.Start = this;
+				path.StartOutgoingPathPosition = position;
+				this.OutgoingPaths.Add(path);
+			}
+			else {
 
-					Vector2 directionByPosition = outgoingPathPosition - this.Position;
-					float angleDeg = Mathf.Abs(Vector2.SignedAngle(actualDirection, directionByPosition));
-
-					// Get the one with the smallest angle between
-					if (angleDeg <= minAngle) {
-						minAngle = angleDeg;
-					
-						if (isStart) {
-							path.StartOutgoingPathPosition = outgoingPathPosition;
-						}
-						else {
-							path.EndOutgoingPathPosition = outgoingPathPosition;
-						}
-					}
+				if (path.Start == this) {
+					path.StartOutgoingPathPosition = position;
+				} else if (path.End == this) {
+					path.EndOutgoingPathPosition = position;
 				}
 			}
-		}
 
-		public void AddOutgoingPathPosition(Vector2 position) {
-			this.OutgoingPathScanPositions.Add(position);
 
+			// Debug stuff
 			Vector3 positionVec3 = Pathing.ToWorldPosition(position);
 			positionVec3.y = 0.01f;
 			Draw.DrawCircle(positionVec3, Color.magenta);
