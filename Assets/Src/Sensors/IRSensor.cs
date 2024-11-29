@@ -53,7 +53,7 @@ public class IRSensor : MonoBehaviour
         // Define the direction of the ray, which is along the object's local Z-axis
         Vector3 direction = transform.forward;
 
-        if (!Physics.Raycast(origin, direction, out RaycastHit hit, RayMaxDistance, GraphLayer))
+        if (!Physics.Raycast(origin, direction, out RaycastHit hit, RayMaxDistance))
         {
             return 0;
         }
