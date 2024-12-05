@@ -10,6 +10,8 @@ namespace Assets.Src.Vehicle.Graph {
 		// The position of the node
 		public Vector2 Position { get; }
 
+		public string Character = "";
+
 		// The directions of the outgoing paths
 		public List<MapPath> OutgoingPaths = new List<MapPath>();
 
@@ -26,6 +28,15 @@ namespace Assets.Src.Vehicle.Graph {
 			circlePos.y = 0.01f;
 			Draw.DrawCircle(circlePos, Color.cyan);
 		}
+		
+		public void SetCharacter(string character) {
+			this.Character = character;
+		}
+		
+		public string GetCharacter() {
+			return this.Character;
+		}
+		
 
 		public MapPath GetOutgoingPathInDirection(Vector2 direction) {
 

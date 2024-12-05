@@ -45,6 +45,68 @@ public class IRSensor : MonoBehaviour
 		}
 	}
 
+    public float GetReflectedLightAndCheckBlackWhite()
+{
+    Vector3 origin = transform.position;
+    Vector3 direction = transform.forward;
+
+    if (!Physics.Raycast(origin, direction, out RaycastHit hit, RayMaxDistance, GraphLayer))
+    {
+        return 0;
+    }
+
+    Renderer renderer = hit.collider.GetComponent<Renderer>();
+    if (renderer == null)
+    {
+        return 0f;
+    }
+
+    Color color;
+
+    // Handle objects with a texture
+    if (renderer.material.mainTexture != null)
+    {
+        Texture2D texture = renderer.material.mainTexture as Texture2D;
+        Vector2 pixelUV = hit.textureCoord;
+        pixelUV.x *= texture.width;
+        pixelUV.y *= texture.height;
+
+        if (!texture.isReadable)
+        {
+            return 0f;
+        }
+
+        color = texture.GetPixel((int)pixelUV.x, (int)pixelUV.y);
+    }
+    // Handle objects without a texture
+    else
+    {
+        color = renderer.material.color;
+    }
+
+    // Additional check: Ensure the surface is black on white
+    float grayscale = color.grayscale;
+    if (grayscale < 0.2f) // Black threshold
+    {
+        Vector3 surroundingPosition = hit.point + hit.normal * 0.01f;
+        if (Physics.Raycast(surroundingPosition, -hit.normal, out RaycastHit surroundingHit, 0.02f))
+        {
+            Renderer surroundingRenderer = surroundingHit.collider.GetComponent<Renderer>();
+            if (surroundingRenderer != null)
+            {
+                Color surroundingColor = surroundingRenderer.material.color;
+                if (surroundingColor.grayscale > 0.8f) // White threshold
+                {
+                    return grayscale;
+                }
+            }
+        }
+    }
+
+    return 0f;
+}
+	
+	
     public float GetReflectedLight()
     {
         // Define the ray starting position as the current position of the object (origin)
@@ -53,7 +115,7 @@ public class IRSensor : MonoBehaviour
         // Define the direction of the ray, which is along the object's local Z-axis
         Vector3 direction = transform.forward;
 
-        if (!Physics.Raycast(origin, direction, out RaycastHit hit, RayMaxDistance))
+        if (!Physics.Raycast(origin, direction, out RaycastHit hit, RayMaxDistance, GraphLayer))
         {
             return 0;
         }
