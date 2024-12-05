@@ -1,7 +1,8 @@
 using Assets.Src.Util;
 using UnityEngine;
 
-public class LineSensorBoard : MonoBehaviour {
+public class LineSensorBoard : MonoBehaviour
+{
 
 	// Sensor for detecting the outgoing paths of a node
 	[HideInInspector]
@@ -21,7 +22,7 @@ public class LineSensorBoard : MonoBehaviour {
 
 	[HideInInspector]
 	public float FrontLineFollowSensorGap { get; private set; } = Constants.PATH_WIDTH * 3 / 4;
-	
+
 	[HideInInspector]
 	public float FrontLineFollowSensorOuterGap { get; private set; } = 0.005f;
 
@@ -50,28 +51,29 @@ public class LineSensorBoard : MonoBehaviour {
 	// Sensors in between the vertical and horizontal sensors (counted clockwise starting front right)
 	[HideInInspector]
 	public IRSensor[] DiagonalSensors { get; private set; } = new IRSensor[4];
-	
+
 	[HideInInspector]
 	public float DiagonalSensorFromCenter { get; private set; } = Constants.NODE_RADIUS / 2f;
 
 
 	private IRSensor CreateIRSensorGameObject(Vector3 position)
 	{
-    	// Create the new GameObject and add the IRSensor component
-    	// GameObject sensor = new GameObject("IRSensor");
+		// Create the new GameObject and add the IRSensor component
+		// GameObject sensor = new GameObject("IRSensor");
 		GameObject sensor = GameObject.CreatePrimitive(PrimitiveType.Cube);
 		sensor.transform.localScale = new Vector3(0.01f, 0.01f, 0.01f);
 		sensor.GetComponent<Renderer>().material.color = Color.black;
-    	sensor.AddComponent<IRSensor>();
-    	sensor.transform.SetParent(this.transform);
+		sensor.AddComponent<IRSensor>();
+		sensor.transform.SetParent(this.transform);
 		sensor.transform.localPosition = position;
 		sensor.transform.rotation = Quaternion.Euler(90f, 0, 0);
-    	return sensor.GetComponent<IRSensor>();
+		return sensor.GetComponent<IRSensor>();
 	}
 
 
 
-	void Start() {
+	void Start()
+	{
 
 		this.PathDetectionSensor = CreateIRSensorGameObject(new Vector3(0, 0, this.PathDetectionSensorDistanceFromCenter));
 
@@ -106,21 +108,26 @@ public class LineSensorBoard : MonoBehaviour {
 	}
 
 
-	void ShowDebugLines() {
+	void ShowDebugLines()
+	{
 
-		foreach (IRSensor sensor in this.FrontLineFollowSensors) {
-			sensor.DrawDebugLine();
-		}
-		
-		foreach (IRSensor sensor in this.HorizontalSensors) {
-			sensor.DrawDebugLine();
-		}
-
-		foreach (IRSensor sensor in this.VerticalSensors) {
+		foreach (IRSensor sensor in this.FrontLineFollowSensors)
+		{
 			sensor.DrawDebugLine();
 		}
 
-		foreach (IRSensor sensor in this.DiagonalSensors) {
+		foreach (IRSensor sensor in this.HorizontalSensors)
+		{
+			sensor.DrawDebugLine();
+		}
+
+		foreach (IRSensor sensor in this.VerticalSensors)
+		{
+			sensor.DrawDebugLine();
+		}
+
+		foreach (IRSensor sensor in this.DiagonalSensors)
+		{
 			sensor.DrawDebugLine();
 		}
 

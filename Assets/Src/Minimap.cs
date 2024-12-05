@@ -22,20 +22,20 @@ public class Minimap : MonoBehaviour
 
 	void Start()
 	{
-		Instance = this;
-		this.drawingArea = this.GetComponent<RawImage>();
+	 Instance = this;
+    this.drawingArea = this.GetComponent<RawImage>();
 
-		int textureWidth = Mathf.Max(1, (int)drawingArea.rectTransform.rect.width);
-		int textureHeight = Mathf.Max(1, (int)drawingArea.rectTransform.rect.height);
+    int textureWidth = Mathf.Max(1, (int)drawingArea.rectTransform.rect.width);
+    int textureHeight = Mathf.Max(1, (int)drawingArea.rectTransform.rect.height);
 
-		texture = new Texture2D(textureWidth, textureHeight, TextureFormat.RGBA32, false);
-		this.drawingArea.texture = texture;
-		this.texture.filterMode = FilterMode.Point;
+    texture = new Texture2D(textureWidth, textureHeight, TextureFormat.RGBA32, false);
+    this.drawingArea.texture = texture;
+    this.texture.filterMode = FilterMode.Point;
 
-		this.DistanceBottomToMap = texture.height - texture.width;
-		this.WorldToMapRatio = (Constants.MAP_WIDTH != 0) ? 1f / Constants.MAP_WIDTH * texture.width : 1f;
+    this.DistanceBottomToMap = texture.height - texture.width;
+    this.WorldToMapRatio = (Constants.MAP_WIDTH != 0) ? 1f / Constants.MAP_WIDTH * texture.width : 1f;
 
-		ClearTexture();
+    ClearTexture();
 	}
 
 	public void SetStartingPosition(Vector3 startingPosition)

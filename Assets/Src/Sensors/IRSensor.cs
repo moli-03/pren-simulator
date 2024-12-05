@@ -6,107 +6,115 @@ public class IRSensor : MonoBehaviour
 {
     public float RayMaxDistance = 1f;    // Distance the laser will shoot
 
-	private LineRenderer lineRenderer;
-	private bool drawDebugLine = false;
+    private LineRenderer lineRenderer;
+    private bool drawDebugLine = false;
 
-	private LayerMask GraphLayer;
+    private LayerMask GraphLayer;
 
-	void Start() {
-		this.lineRenderer = this.gameObject.AddComponent<LineRenderer>();
-		this.lineRenderer.receiveShadows = false;
-		this.lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-		this.lineRenderer.useWorldSpace = true;
+    void Start()
+    {
+        this.lineRenderer = this.gameObject.AddComponent<LineRenderer>();
+        this.lineRenderer.receiveShadows = false;
+        this.lineRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+        this.lineRenderer.useWorldSpace = true;
         this.lineRenderer.startWidth = 0.004f;
         this.lineRenderer.endWidth = 0.004f;
         this.lineRenderer.material = new Material(Shader.Find("Sprites/Default"));
         this.lineRenderer.startColor = Color.red;
         this.lineRenderer.endColor = Color.red;
-		this.GraphLayer = 1 << LayerMask.NameToLayer("Graph");
-	}
+        this.GraphLayer = 1 << LayerMask.NameToLayer("Graph");
+    }
 
-	public void DrawDebugLine() {
-		this.drawDebugLine = true;
-	}
+    public void DrawDebugLine()
+    {
+        this.drawDebugLine = true;
+    }
 
-	public void RemoveDebugLine() {
-		this.drawDebugLine = false;
-	}
+    public void RemoveDebugLine()
+    {
+        this.drawDebugLine = false;
+    }
 
-	void Update() {
+    void Update()
+    {
 
-		if (this.drawDebugLine) {
-        	Vector3 start = transform.position;
-			bool hitSomething = Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, RayMaxDistance);
-        	Vector3 end = hitSomething ? hit.point : transform.position + this.transform.forward * this.RayMaxDistance;
-        	lineRenderer.SetPosition(0, start);
-        	lineRenderer.SetPosition(1, end);
+        if (this.drawDebugLine)
+        {
+            Vector3 start = transform.position;
+            bool hitSomething = Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, RayMaxDistance);
+            Vector3 end = hitSomething ? hit.point : transform.position + this.transform.forward * this.RayMaxDistance;
+            lineRenderer.SetPosition(0, start);
+            lineRenderer.SetPosition(1, end);
 
-			this.GetComponent<Renderer>().material.color = Pathing.IsOnLine(this) ? Color.green : Color.black;
-		}
-	}
+            this.GetComponent<Renderer>().material.color = Pathing.IsOnLine(this) ? Color.green : Color.black;
+        }
+    }
 
     public float GetReflectedLightAndCheckBlackWhite()
-{
-    Vector3 origin = transform.position;
-    Vector3 direction = transform.forward;
-
-    if (!Physics.Raycast(origin, direction, out RaycastHit hit, RayMaxDistance, GraphLayer))
     {
-        return 0;
-    }
+        Vector3 origin = transform.position;
+        Vector3 direction = transform.forward;
 
-    Renderer renderer = hit.collider.GetComponent<Renderer>();
-    if (renderer == null)
-    {
-        return 0f;
-    }
+        if (!Physics.Raycast(origin, direction, out RaycastHit hit, RayMaxDistance, GraphLayer))
+        {
+            return 0;
+        }
 
-    Color color;
-
-    // Handle objects with a texture
-    if (renderer.material.mainTexture != null)
-    {
-        Texture2D texture = renderer.material.mainTexture as Texture2D;
-        Vector2 pixelUV = hit.textureCoord;
-        pixelUV.x *= texture.width;
-        pixelUV.y *= texture.height;
-
-        if (!texture.isReadable)
+        Renderer renderer = hit.collider.GetComponent<Renderer>();
+        if (renderer == null)
         {
             return 0f;
         }
 
-        color = texture.GetPixel((int)pixelUV.x, (int)pixelUV.y);
-    }
-    // Handle objects without a texture
-    else
-    {
-        color = renderer.material.color;
-    }
+        Color color;
 
-    // Additional check: Ensure the surface is black on white
-    float grayscale = color.grayscale;
-    if (grayscale < 0.2f) // Black threshold
-    {
-        Vector3 surroundingPosition = hit.point + hit.normal * 0.01f;
-        if (Physics.Raycast(surroundingPosition, -hit.normal, out RaycastHit surroundingHit, 0.02f))
+        // Handle objects with a texture
+        if (renderer.material.mainTexture != null)
         {
-            Renderer surroundingRenderer = surroundingHit.collider.GetComponent<Renderer>();
-            if (surroundingRenderer != null)
+            Texture2D texture = renderer.material.mainTexture as Texture2D;
+            Vector2 pixelUV = hit.textureCoord;
+            pixelUV.x *= texture.width;
+            pixelUV.y *= texture.height;
+
+            if (!texture.isReadable)
             {
-                Color surroundingColor = surroundingRenderer.material.color;
-                if (surroundingColor.grayscale > 0.8f) // White threshold
+                return 0f;
+            }
+
+            color = texture.GetPixel((int)pixelUV.x, (int)pixelUV.y);
+        }
+        // Handle objects without a texture
+        else
+        {
+            color = renderer.material.color;
+        }
+
+        // Additional check: Ensure the surface is black on white
+        float grayscale = color.grayscale;
+
+        if (grayscale < 0.4f) // Black threshold
+        {
+            Vector3 surroundingPosition = hit.point + hit.normal * 0.01f;
+            if (Physics.Raycast(surroundingPosition, -hit.normal, out RaycastHit surroundingHit, 0.02f))
+            {
+                Renderer surroundingRenderer = surroundingHit.collider.GetComponent<Renderer>();
+                if (surroundingRenderer != null)
                 {
-                    return grayscale;
+                    Color surroundingColor = surroundingRenderer.material.color;
+
+                    if (surroundingColor.grayscale > 0.8f) // White threshold
+                    {
+                        //Debug.Log("Black on white detected!");
+                        return grayscale;
+                    }
                 }
             }
         }
+
+        return grayscale;
     }
 
-    return 0f;
-}
-	
-	
+
     public float GetReflectedLight()
     {
         // Define the ray starting position as the current position of the object (origin)
@@ -138,9 +146,10 @@ public class IRSensor : MonoBehaviour
             pixelUV.x *= texture.width;
             pixelUV.y *= texture.height;
 
-			if (!texture.isReadable) {
-				return 0f;
-			}
+            if (!texture.isReadable)
+            {
+                return 0f;
+            }
 
             // Get the color at the pixel coordinates
             color = texture.GetPixel((int)pixelUV.x, (int)pixelUV.y);
@@ -154,8 +163,8 @@ public class IRSensor : MonoBehaviour
         {
             return 0f;
         }
-		
-		// Return the grayscale value of the color
-		return color.grayscale;
+
+        // Return the grayscale value of the color
+        return color.grayscale;
     }
 }

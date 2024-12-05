@@ -21,7 +21,11 @@ public class Map : MonoBehaviour
     private int maxConeCount = 3;
 	private int minConeCount = 1;
     private int maxRemovePathCount = 4;
-	private int minRemovePathCount = 0;
+    private int minRemovePathCount = 0;
+    public Material EndMaterialA;
+    public Material EndMaterialB;
+    public Material EndMaterialC;
+
 	private Vector3 coneScale = new Vector3(13.5f, 13.5f, 13.5f);
     private Node endNode;
 
@@ -59,17 +63,17 @@ public class Map : MonoBehaviour
         this.MainCamera = Camera.main;
 
         // Create all node instances on their default positions
-        Node A = Instantiate(NodePrefab, new Vector3(2, 0, 0.1f), Quaternion.identity).GetComponent<Node>().SetLabel("G");
+        Node A = Instantiate(NodePrefab, new Vector3(2, 0, 0.1f), Quaternion.identity).GetComponent<Node>().SetName("G").SetMaterial(EndMaterialC);
         Node B = Instantiate(NodePrefab, new Vector3(0.5f, 0, 0.5f), Quaternion.identity).GetComponent<Node>();
         Node C = Instantiate(NodePrefab, new Vector3(3.5f, 0, 0.5f), Quaternion.identity).GetComponent<Node>();
         Node D = Instantiate(NodePrefab, new Vector3(1.5f, 0, 1f), Quaternion.identity).GetComponent<Node>();
-        Node E = Instantiate(NodePrefab, new Vector3(0.5f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("A");
+        Node E = Instantiate(NodePrefab, new Vector3(0.5f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetName("A").SetMaterial(EndMaterialA);
         Node F = Instantiate(NodePrefab, new Vector3(1.5f, 0, 1.5f), Quaternion.identity).GetComponent<Node>();
-        Node G = Instantiate(NodePrefab, new Vector3(3.25f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("C");
-        Node H = Instantiate(NodePrefab, new Vector3(2f, 0, 2.75f), Quaternion.identity).GetComponent<Node>().SetLabel("B");
+        Node G = Instantiate(NodePrefab, new Vector3(3.25f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetName("C").SetMaterial(EndMaterialC);
+        Node H = Instantiate(NodePrefab, new Vector3(2f, 0, 2.75f), Quaternion.identity).GetComponent<Node>().SetName("B").SetMaterial(EndMaterialB);
 
 		// Create start
-        Node start = Instantiate(NodePrefab, new Vector3(2, 0, -0.4f), Quaternion.identity).GetComponent<Node>().SetLabel("S");
+        Node start = Instantiate(NodePrefab, new Vector3(2, 0, -0.4f), Quaternion.identity).GetComponent<Node>().SetName("S").SetMaterial(EndMaterialB);
         this.AddNode(start);
 
         // Add to node list
@@ -529,8 +533,8 @@ public class Map : MonoBehaviour
         Vector3 coneScale = new Vector3(16.5f, 16.5f, 16.5f);
 
         // Identify nodes to exclude
-        Node robotStartNode = Nodes.FirstOrDefault(n => n.GetLabel() == "G");
-        Node startNode = Nodes.FirstOrDefault(n => n.GetLabel() == "S");
+        Node robotStartNode = Nodes.FirstOrDefault(n => n.GetName() == "G");
+        Node startNode = Nodes.FirstOrDefault(n => n.GetName() == "S");
         List<Node> excludeNodes = new List<Node>
 		{
 			startNode,
@@ -546,9 +550,9 @@ public class Map : MonoBehaviour
 
         // Ensure at least one of E, H, or G is not covered
         List<Node> criticalNodes = new List<Node> {
-        	Nodes.FirstOrDefault(n => n.GetLabel() == "A"),
-        	Nodes.FirstOrDefault(n => n.GetLabel() == "B"),
-        	Nodes.FirstOrDefault(n => n.GetLabel() == "C")
+        	Nodes.FirstOrDefault(n => n.GetName() == "A"),
+        	Nodes.FirstOrDefault(n => n.GetName() == "B"),
+        	Nodes.FirstOrDefault(n => n.GetName() == "C")
     	};
 
         bool allCriticalCovered = criticalNodes.All(node => nodesWithCones.Contains(node));
@@ -585,8 +589,8 @@ public class Map : MonoBehaviour
         List<Path> pathsToRemove = allPaths.OrderBy(_ => Random.value).ToList();
 
         // Identify the start and first nodes
-        Node startNode = Nodes.FirstOrDefault(n => n.GetLabel() == "S");
-        Node firstNode = Nodes.FirstOrDefault(n => n.GetLabel() == "G"); 
+        Node startNode = Nodes.FirstOrDefault(n => n.name == "S");
+        Node firstNode = Nodes.FirstOrDefault(n => n.name == "G"); 
 
 
         int removedCount = 0;

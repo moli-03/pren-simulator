@@ -20,7 +20,7 @@ public class UIController : MonoBehaviour
 	}
 
 	public void UpdateTarget(Node node) {
-		this.DestinationTMP.text = "Target: " + node.GetLabel();
+		this.DestinationTMP.text = "Target: " + node.GetName();
 	}
 
 	public void UpdateState(VehicleState state) {

@@ -5,28 +5,48 @@ using UnityEngine;
 public class Node : MonoBehaviour
 {
 	public int Index { get; set; }
+	private string name;
+
 
 	void Start() {
 		this.transform.localScale = new Vector3(Constants.NODE_RADIUS * 2, 0.001f, Constants.NODE_RADIUS * 2);
 	}
 
-    public Node SetLabel(string label)
-    {
-        this.transform.Find("Canvas/Letter").GetComponent<TMP_Text>().text = label;
-        return this;
-    }
+	public Node SetName(string name)
+	{
+		this.name = name;
+		return this;
+	}
 
-    public string GetLabel()
-    {
-        return this.transform.Find("Canvas/Letter").GetComponent<TMP_Text>().text;
-    }
+	public string GetName()
+	{
+		return this.name;
+	}
 
-	public Node SetColor(Color color) {
+	public Node SetMaterial(Material newMaterial)
+	{
+		Renderer node = this.GetComponent<Renderer>();
+		if (node != null)
+		{
+			GetComponent<Renderer>().material = newMaterial;
+		}
+
+		return this;
+	}
+
+	public Material GetMaterial()
+	{
+		return this.GetComponent<Renderer>().material;
+	}
+
+	public Node SetColor(Color color)
+	{
 		this.GetComponent<Renderer>().material.color = color;
 		return this;
 	}
-	
-	public Color GetColor() {
+
+	public Color GetColor()
+	{
 		return this.GetComponent<Renderer>().material.color;
 	}
 }

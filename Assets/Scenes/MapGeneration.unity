@@ -1559,6 +1559,9 @@ MonoBehaviour:
   GraphLayer:
     serializedVersion: 2
     m_Bits: 64
+  EndMaterialA: {fileID: 2100000, guid: 3a08f064dd1b14d4091c10c0e7c4d0f4, type: 2}
+  EndMaterialB: {fileID: 2100000, guid: f10f391a5b6984cf6a800286734124cb, type: 2}
+  EndMaterialC: {fileID: 2100000, guid: facbfc70121194b9388e6e8c1c6b613d, type: 2}
   Nodes: []
 --- !u!4 &1504210314
 Transform:

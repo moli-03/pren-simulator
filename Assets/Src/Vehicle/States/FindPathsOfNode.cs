@@ -12,7 +12,7 @@ namespace Assets.Src.Vehicle.States
 		private bool Sensor1WasOnLine = false;
 		private bool Sensor2WasOnLine = false;
 		public override string Name => "FindPathsOfNode";
-		private const float LineThreshold = 0.8f;
+		private const float LineThreshold = 1f;
 
 		private bool StartedOnLine = false;
 		private bool StartedOnLineFoundLine = false;
@@ -97,13 +97,28 @@ namespace Assets.Src.Vehicle.States
 		private void DetectCharacters()
 		{
 			Debug.Log($"Sensor1 Line Count: {Sensor1LineCount}");
-
-			// Determine character presence based on line count
-			if (Sensor1LineCount > 0 && Sensor2LineCount > 0)
+			if (Sensor1LineCount > 4 && Sensor2LineCount > 4)
 			{
-				Debug.Log("Character detected on the node! Sensor1LineCount: " + Sensor1LineCount + ", Sensor2LineCount: " + Sensor2LineCount);
-				CurrentNode.SetCharacter("A"); // Update node property if needed
+				Debug.Log("Character B detected: " + Sensor1LineCount + ", Sensor2LineCount: " + Sensor2LineCount);
+				CurrentNode.SetCharacter("B"); // Update node property if needed
+				return;
 			}
+			// Determine character presence based on line count
+			if (Sensor1LineCount > 3 && Sensor2LineCount > 4)
+			{
+				Debug.Log("Character A detected: " + Sensor1LineCount + ", Sensor2LineCount: " + Sensor2LineCount);
+				CurrentNode.SetCharacter("A"); // Update node property if needed
+				return;
+			}
+
+			if (Sensor1LineCount > 2 && Sensor2LineCount > 3)
+			{
+				Debug.Log("Character C detected: " + Sensor1LineCount + ", Sensor2LineCount: " + Sensor2LineCount);
+				CurrentNode.SetCharacter("C"); // Update node property if needed
+				return;
+			}
+			Debug.Log("Detected: " + Sensor1LineCount + ", Sensor2LineCount: " + Sensor2LineCount);
+
 			return;
 		}
 
@@ -111,33 +126,27 @@ namespace Assets.Src.Vehicle.States
 		public override void Update()
 		{
 
-			bool isSensor1OnLine = Sensor1.GetReflectedLightAndCheckBlackWhite() > 0 && Sensor1.GetReflectedLightAndCheckBlackWhite() <= FindPathsOfNode.LineThreshold;
-			bool isSensor2OnLine = Sensor2.GetReflectedLightAndCheckBlackWhite() > 0 && Sensor2.GetReflectedLightAndCheckBlackWhite() <= FindPathsOfNode.LineThreshold;
+			bool isSensor1OnLine = Sensor1.GetReflectedLightAndCheckBlackWhite() < 0.4f;
+			bool isSensor2OnLine = Sensor2.GetReflectedLightAndCheckBlackWhite() < 0.4f;
 
-
-			// Check for Sensor1 transition (white -> black -> white)
+			// Debounce mechanism for Sensor1
 			if (!Sensor1WasOnLine && isSensor1OnLine)
 			{
-				// Sensor1 just transitioned to black
 				Sensor1WasOnLine = true;
 			}
 			else if (Sensor1WasOnLine && !isSensor1OnLine)
 			{
-				// Sensor1 just transitioned back to white
 				Sensor1LineCount++;
 				Sensor1WasOnLine = false;
-				Debug.Log("Sensor1 detected a black line!");
 			}
 
-			// Check for Sensor2 transition (white -> black -> white)
+			// Debounce mechanism for Sensor2
 			if (!Sensor2WasOnLine && isSensor2OnLine)
 			{
-				// Sensor2 just transitioned to black
 				Sensor2WasOnLine = true;
 			}
 			else if (Sensor2WasOnLine && !isSensor2OnLine)
 			{
-				// Sensor2 just transitioned back to white
 				Sensor2LineCount++;
 				Sensor2WasOnLine = false;
 				Debug.Log("Sensor2 detected a black line!");
