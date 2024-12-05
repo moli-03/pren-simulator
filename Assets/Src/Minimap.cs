@@ -13,73 +13,83 @@ public class Minimap : MonoBehaviour
 	public RawImage drawingArea;  // Attach the UI panel here (RawImage component)
 	private Color BackgroundColor = new Color(0, 0, 0, 0.7f);
 	private Color ConeColor = new Color(255, 165, 0);
-    private Texture2D texture;    // The texture to draw on
-	private Vector2	lastPosition = Vector2.zero;
-	private float WorldToMapRatio;	// Ratio to convert world coordinates (m) to coordinates on the texture
+	private Texture2D texture;    // The texture to draw on
+	private Vector2 lastPosition = Vector2.zero;
+	private float WorldToMapRatio;  // Ratio to convert world coordinates (m) to coordinates on the texture
 	private int OffsetX = 0;
 	private int OffsetY = 0;
 	private int DistanceBottomToMap;
 
-    void Start()
-    {
+	void Start()
+	{
 		Instance = this;
 		this.drawingArea = this.GetComponent<RawImage>();
-        // Create a new texture with the same size as the RawImage
-        texture = new Texture2D((int)drawingArea.rectTransform.rect.width, (int)drawingArea.rectTransform.rect.height, TextureFormat.RGBA32, false);
-        // Set the texture to the RawImage to display it
-        this.drawingArea.texture = texture;
-        this.texture.filterMode = FilterMode.Point; // Optional: Set the filter mode
+
+		int textureWidth = Mathf.Max(1, (int)drawingArea.rectTransform.rect.width);
+		int textureHeight = Mathf.Max(1, (int)drawingArea.rectTransform.rect.height);
+
+		texture = new Texture2D(textureWidth, textureHeight, TextureFormat.RGBA32, false);
+		this.drawingArea.texture = texture;
+		this.texture.filterMode = FilterMode.Point;
 
 		this.DistanceBottomToMap = texture.height - texture.width;
+		this.WorldToMapRatio = (Constants.MAP_WIDTH != 0) ? 1f / Constants.MAP_WIDTH * texture.width : 1f;
 
-		this.WorldToMapRatio = 1f / Constants.MAP_WIDTH * texture.width;
+		ClearTexture();
+	}
 
-		// Initially clear the minimap
-        ClearTexture();
-    }
-
-	public void SetStartingPosition(Vector3 startingPosition) {
+	public void SetStartingPosition(Vector3 startingPosition)
+	{
 		this.OffsetX = (int)(Pathing.Vec3ToVec2(startingPosition).x * this.WorldToMapRatio);
 		this.OffsetY = (int)(Pathing.Vec3ToVec2(startingPosition).y * this.WorldToMapRatio);
 	}
 
 
-	public void AddCone(Vector2 position) {
+	public void AddCone(Vector2 position)
+	{
 
 	}
 
 
-	public void AddBarrier(Vector2 position) {
+	public void AddBarrier(Vector2 position)
+	{
 
 	}
 
-	private Vector2Int ToMapPosition(Vector2 worldPosition) {
+	private Vector2Int ToMapPosition(Vector2 worldPosition)
+	{
 		return new Vector2Int((int)(worldPosition.x * this.WorldToMapRatio + this.OffsetX), (int)(worldPosition.y * this.WorldToMapRatio + this.OffsetY + this.DistanceBottomToMap));
 	}
 
-	private int ToMapDistance(float distance) {
+	private int ToMapDistance(float distance)
+	{
 		return (int)(distance * this.WorldToMapRatio);
 	}
 
-	private void DrawCircle(Vector2 center, float radius, Color color) {
+	private void DrawCircle(Vector2 center, float radius, Color color)
+	{
 
 		Vector2Int mapPosition = this.ToMapPosition(center);
 		int radiusPixel = this.ToMapDistance(radius);
 
-		for (int x = mapPosition.x - radiusPixel; x <= mapPosition.x + radiusPixel; x++) {
+		for (int x = mapPosition.x - radiusPixel; x <= mapPosition.x + radiusPixel; x++)
+		{
 
-			for (int y = mapPosition.y + radiusPixel; y >= mapPosition.y - radiusPixel; y--) {
+			for (int y = mapPosition.y + radiusPixel; y >= mapPosition.y - radiusPixel; y--)
+			{
 
 				float distance = Vector2Int.Distance(new Vector2Int(x, y), mapPosition);
 
-				if (distance <= radiusPixel) {
+				if (distance <= radiusPixel)
+				{
 					texture.SetPixel(x, y, color);
 				}
 			}
 		}
 	}
 
-	void DrawLine(Vector2 start, Vector2 end, Color color) {
+	void DrawLine(Vector2 start, Vector2 end, Color color)
+	{
 
 		Vector2Int mapStart = this.ToMapPosition(start);
 		Vector2Int mapEnd = this.ToMapPosition(end);
@@ -125,7 +135,8 @@ public class Minimap : MonoBehaviour
 
 
 
-	private void AddVehicle(Vector2 position) {
+	private void AddVehicle(Vector2 position)
+	{
 
 		int vehicleWidth = this.ToMapDistance(Constants.VEHICLE_WIDTH);
 		int vehicleHeight = this.ToMapDistance(Constants.VEHICLE_HEIGHT);
@@ -135,18 +146,21 @@ public class Minimap : MonoBehaviour
 		int yMax = mapPosition.y + vehicleHeight / 2;
 		int yMin = mapPosition.y - vehicleHeight / 2;
 
-		for (int x = xMin; x <= xMax; x++) {
-			for (int y = yMax; y >= yMin; y--) {
+		for (int x = xMin; x <= xMax; x++)
+		{
+			for (int y = yMax; y >= yMin; y--)
+			{
 				texture.SetPixel(x, y, Color.white);
 			}
 		}
 	}
 
 
-    public void UpdateMap()
-    {
+	public void UpdateMap()
+	{
 
-		if (this.Vehicle == null) {
+		if (this.Vehicle == null)
+		{
 			return;
 		}
 
@@ -154,21 +168,26 @@ public class Minimap : MonoBehaviour
 		ClearTexture();
 
 		// Add all known nodes
-		foreach (MapNode node in this.Vehicle.Map.Nodes) {
+		foreach (MapNode node in this.Vehicle.Map.Nodes)
+		{
 
 			// Draw all the outgoing paths
-			foreach (MapPath path in node.OutgoingPaths){
+			foreach (MapPath path in node.OutgoingPaths)
+			{
 				Vector2? position = path.Start == node ? path.StartOutgoingPathPosition : path.EndOutgoingPathPosition;
 
-				if (position.HasValue) {
+				if (position.HasValue)
+				{
 					Vector2 scaledPosition = node.Position + (position.Value - node.Position).normalized * 0.3f;
 					this.DrawLine(node.Position, scaledPosition, Color.magenta);
 				}
 			}
 
 			// Draw the actually figured out paths
-			foreach (MapPath path in node.OutgoingPaths) {
-				if (path.IsVisited) {
+			foreach (MapPath path in node.OutgoingPaths)
+			{
+				if (path.IsVisited)
+				{
 					this.DrawLine(path.Start.Position, path.End.Position, Color.white);
 				}
 			}
@@ -178,18 +197,18 @@ public class Minimap : MonoBehaviour
 		}
 
 		texture.Apply();
-    }
+	}
 
-    void ClearTexture()
-    {
-        // Clear the texture with a white background
-        for (int x = 0; x < texture.width; x++)
-        {
-            for (int y = 0; y < texture.height; y++)
-            {
-                texture.SetPixel(x, y, this.BackgroundColor);
-            }
-        }
-        texture.Apply();
-    }
+	void ClearTexture()
+	{
+		// Clear the texture with a white background
+		for (int x = 0; x < texture.width; x++)
+		{
+			for (int y = 0; y < texture.height; y++)
+			{
+				texture.SetPixel(x, y, this.BackgroundColor);
+			}
+		}
+		texture.Apply();
+	}
 }
