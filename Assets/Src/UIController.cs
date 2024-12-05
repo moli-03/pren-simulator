@@ -34,6 +34,10 @@ public class UIController : MonoBehaviour
 		InvokeRepeating(nameof(UpdateTimerUI), 1.0f, 1.0f);
 	}
 
+	public void StopTimer() {
+		CancelInvoke(nameof(UpdateTimerUI));
+	}
+
 	private void UpdateTimerUI() {
 		TimeSpan passedTime = DateTime.Now - this.TimerStart;
 		this.TimerTMP.text = "Timer: " + passedTime.Minutes + "m " + passedTime.Seconds + "s";

@@ -36,7 +36,7 @@ namespace Assets.Src.Vehicle.Graph {
 		public string GetCharacter() {
 			return this.Character;
 		}
-		
+
 
 		public MapPath GetOutgoingPathInDirection(Vector2 direction) {
 

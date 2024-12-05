@@ -1,6 +1,10 @@
 using System.Runtime.InteropServices;
 using Assets.Src.Util;
 using UnityEngine;
+using System.Collections.Generic;
+using System.Linq; // Required for LINQ methods like Skip and Zip
+
+
 
 public class IRSensor : MonoBehaviour
 {
@@ -10,6 +14,12 @@ public class IRSensor : MonoBehaviour
     private bool drawDebugLine = false;
 
     private LayerMask GraphLayer;
+    private LayerMask GroundLayer;
+    
+    private Queue<float> recentReadings = new Queue<float>();
+        private Queue<float> blackWhiteRecentReadings = new Queue<float>();
+
+    private const int MaxReadings = 10; // Number of frames to store
 
     void Start()
     {
@@ -23,8 +33,52 @@ public class IRSensor : MonoBehaviour
         this.lineRenderer.startColor = Color.red;
         this.lineRenderer.endColor = Color.red;
         this.GraphLayer = 1 << LayerMask.NameToLayer("Graph");
+        this.GroundLayer = 1 << LayerMask.NameToLayer("Ground");
     }
 
+    public void UpdateBlackWhiteSensorReadings(float newReading)
+    {
+        blackWhiteRecentReadings.Enqueue(newReading);
+        if (blackWhiteRecentReadings.Count > MaxReadings)
+        {
+            blackWhiteRecentReadings.Dequeue();
+        }
+    }
+
+   public void UpdateSensorReadings(float newReading)
+    {
+        recentReadings.Enqueue(newReading);
+        if (recentReadings.Count > MaxReadings)
+        {
+            recentReadings.Dequeue();
+        }
+    }
+
+    public IEnumerable<float> GetRecentReadings()
+    {
+        return recentReadings;
+    }
+
+
+    public IEnumerable<float> GetBlackWhiteRecentReadings()
+    {
+        return blackWhiteRecentReadings;
+    }
+
+    public bool IsTransitioning()
+    {
+        if (recentReadings.Count < MaxReadings) return false; // Not enough data yet
+
+        float first = recentReadings.Peek();
+        float last = 0f;
+        foreach (float value in recentReadings)
+        {
+            last = value; // Get the last value
+        }
+
+        // Check if the readings show a transition from black to ground or vice versa
+        return Mathf.Abs(last - first) > 0.2f; // Adjust the threshold as needed
+    }
     public void DrawDebugLine()
     {
         this.drawDebugLine = true;
@@ -57,7 +111,7 @@ public class IRSensor : MonoBehaviour
 
         if (!Physics.Raycast(origin, direction, out RaycastHit hit, RayMaxDistance, GraphLayer))
         {
-            return 0;
+            return 0f;
         }
 
         Renderer renderer = hit.collider.GetComponent<Renderer>();
@@ -117,54 +171,49 @@ public class IRSensor : MonoBehaviour
 
     public float GetReflectedLight()
     {
-        // Define the ray starting position as the current position of the object (origin)
         Vector3 origin = transform.position;
-
-        // Define the direction of the ray, which is along the object's local Z-axis
         Vector3 direction = transform.forward;
-
-        if (!Physics.Raycast(origin, direction, out RaycastHit hit, RayMaxDistance, GraphLayer))
+        RaycastHit hit = new RaycastHit();
+        Renderer renderer = null;
+        if (!Physics.Raycast(origin, direction, out hit, RayMaxDistance, GraphLayer | GroundLayer))
         {
-            return 0;
+            Debug.Log("No hit found!");
+            return 0f;
         }
 
-        // Try to get the Renderer component of the hit object
-        Renderer renderer = hit.collider.GetComponent<Renderer>();
+        renderer = hit.collider.GetComponent<Renderer>();
+        if (renderer == null)
+        {
+            Debug.Log("No renderer found!");
+            return 0f;
+        }
 
         Color color;
 
-        // Color of gameObjects with a texture
-        if (renderer != null && renderer.material.mainTexture != null)
+        // Handle objects with textures
+        if (renderer.material.mainTexture != null)
         {
-            // Get the texture from the object
             Texture2D texture = renderer.material.mainTexture as Texture2D;
-
-            // Get the UV coordinates of the hit point
             Vector2 pixelUV = hit.textureCoord;
-
-            // Convert UV coordinates to texture pixel coordinates
             pixelUV.x *= texture.width;
             pixelUV.y *= texture.height;
 
             if (!texture.isReadable)
             {
-                return 0f;
+                Debug.Log("Texture is not readable!");
+                return 0f; // Small non-zero value for unreadable textures
             }
 
-            // Get the color at the pixel coordinates
             color = texture.GetPixel((int)pixelUV.x, (int)pixelUV.y);
-        }
-        // Color of gameObjects without a texture (lines etc.)
-        else if (renderer != null)
-        {
-            color = renderer.material.color;
         }
         else
         {
-            return 0f;
+            // Use the material color if no texture is found
+            color = renderer.material.color;
         }
 
         // Return the grayscale value of the color
         return color.grayscale;
     }
+
 }

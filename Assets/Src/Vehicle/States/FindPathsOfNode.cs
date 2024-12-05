@@ -9,8 +9,18 @@ namespace Assets.Src.Vehicle.States
 
 	public class FindPathsOfNode : VehicleState
 	{
-		private bool Sensor1WasOnLine = false;
-		private bool Sensor2WasOnLine = false;
+		private bool SensorVertical1WasOnLine = false;
+		private bool SensorVertical2WasOnLine = false;
+		private bool SensorHorizontal1WasOnLine = false;
+		private bool SensorHorizontal2WasOnLine = false;
+
+		private bool SensorDiagonal1WasOnLine = false;
+		private bool SensorDiagonal2WasOnLine = false;
+		private bool SensorDiagonal3WasOnLine = false;
+		private bool SensorDiagonal4WasOnLine = false;
+
+		private bool SensorMiddle1WasOnLine = false;
+
 		public override string Name => "FindPathsOfNode";
 		private const float LineThreshold = 1f;
 
@@ -20,11 +30,33 @@ namespace Assets.Src.Vehicle.States
 		private MapNode CurrentNode;
 		private List<LineEdgePoints> EdgePoints = new List<LineEdgePoints>();
 		private List<string> DetectedCharacters = new List<string>();
-		private int Sensor1LineCount = 0;
-		private int Sensor2LineCount = 0;
+		private int SensorHorizontal1Count = 0;
+		private int SensorHorizontal2Count = 0;
 
-		private IRSensor Sensor1; // First sensor
-		private IRSensor Sensor2; // Second sensor
+		private int SensorVertical1Count = 0;
+		private int SensorVertical2Count = 0;
+
+		private int SensorDiagonal1Count = 0;
+		private int SensorDiagonal2Count = 0;
+		private int SensorDiagonal3Count = 0;
+		private int SensorDiagonal4Count = 0;
+
+		private int SensorMiddle1Count = 0;
+
+
+
+		private IRSensor SensorHorizontal1;
+		private IRSensor SensorHorizontal2;
+
+		private IRSensor SensorVertical1;
+		private IRSensor SensorVertical2;
+
+		private IRSensor SensorDiagonal1;
+		private IRSensor SensorDiagonal2;
+		private IRSensor SensorDiagonal3;
+		private IRSensor SensorDiagonal4;
+
+		private IRSensor SensorMiddle1;
 
 		struct LineEdgePoints
 		{
@@ -40,8 +72,18 @@ namespace Assets.Src.Vehicle.States
 
 		public override void Start()
 		{
-			this.Sensor1 = this.Vehicle.SensorBoard.HorizontalSensors[0];
-			this.Sensor2 = this.Vehicle.SensorBoard.DiagonalSensors[2];
+			this.SensorHorizontal1 = this.Vehicle.SensorBoard.HorizontalSensors[0];
+			this.SensorHorizontal2 = this.Vehicle.SensorBoard.HorizontalSensors[1];
+
+			this.SensorVertical1 = this.Vehicle.SensorBoard.VerticalSensors[0];
+			this.SensorVertical2 = this.Vehicle.SensorBoard.VerticalSensors[1];
+
+			this.SensorDiagonal1 = this.Vehicle.SensorBoard.DiagonalSensors[0];
+			this.SensorDiagonal2 = this.Vehicle.SensorBoard.DiagonalSensors[1];
+			this.SensorDiagonal3 = this.Vehicle.SensorBoard.DiagonalSensors[2];
+			this.SensorDiagonal4 = this.Vehicle.SensorBoard.DiagonalSensors[3];
+
+			this.SensorMiddle1 = this.Vehicle.SensorBoard.MiddleSensor;
 			// Check if outgoing paths are already scanned
 			if (this.CurrentNode.OutgoingPathsScanned)
 			{
@@ -96,61 +138,80 @@ namespace Assets.Src.Vehicle.States
 
 		private void DetectCharacters()
 		{
-			Debug.Log($"Sensor1 Line Count: {Sensor1LineCount}");
-			if (Sensor1LineCount > 4 && Sensor2LineCount > 4)
-			{
-				Debug.Log("Character B detected: " + Sensor1LineCount + ", Sensor2LineCount: " + Sensor2LineCount);
-				CurrentNode.SetCharacter("B"); // Update node property if needed
-				return;
-			}
-			// Determine character presence based on line count
-			if (Sensor1LineCount > 3 && Sensor2LineCount > 4)
-			{
-				Debug.Log("Character A detected: " + Sensor1LineCount + ", Sensor2LineCount: " + Sensor2LineCount);
-				CurrentNode.SetCharacter("A"); // Update node property if needed
-				return;
-			}
+			//TODO: Implement character detection
 
-			if (Sensor1LineCount > 2 && Sensor2LineCount > 3)
+			int totalLinesDetected = this.SensorHorizontal1Count + this.SensorHorizontal2Count + this.SensorVertical1Count + this.SensorVertical2Count + this.SensorDiagonal1Count + this.SensorDiagonal2Count + this.SensorDiagonal3Count + this.SensorDiagonal4Count + this.SensorMiddle1Count;
+			if (totalLinesDetected > 30)
 			{
-				Debug.Log("Character C detected: " + Sensor1LineCount + ", Sensor2LineCount: " + Sensor2LineCount);
-				CurrentNode.SetCharacter("C"); // Update node property if needed
-				return;
+				this.DetectedCharacters.Add("B");
 			}
-			Debug.Log("Detected: " + Sensor1LineCount + ", Sensor2LineCount: " + Sensor2LineCount);
+			if (this.SensorDiagonal2Count < 18)
+			{
+				this.DetectedCharacters.Add("C");
+			}
+			this.DetectedCharacters.Add("A");
 
+			Debug.Log($"Detected characters: {string.Join(", ", this.DetectedCharacters)}");
+
+			if (Physics.Raycast(this.Vehicle.Position, Vector3.down, out RaycastHit hit, Mathf.Infinity, LayerMask.NameToLayer("Graph")))
+			{
+				// Check if we hit a node
+				Debug.Log("Gameobbject: " + hit.collider.gameObject.name);
+				Node node = hit.collider.GetComponent<Node>();
+				if (node != null && node.GetName() == "endPlease")
+				{
+					// Stop the vehicle
+					this.Vehicle.Drive.Stop();
+					// Disable the line follower
+					this.Vehicle.LineFollower.Disable();
+					// Set the state to end
+					this.Vehicle.SetState(new EndReached(this.Vehicle));
+					return;
+				}
+			}
 			return;
+		}
+
+		public void DidSensorCrossALine(IRSensor sensor, ref bool wasOnLine, ref int lineCount)
+		{
+			sensor.UpdateBlackWhiteSensorReadings(sensor.GetReflectedLight());
+
+			bool isOnLine = sensor.GetBlackWhiteRecentReadings().All(value => value < 0.4f);
+
+			// Debounce mechanism for Sensor1
+			if (!wasOnLine && isOnLine)
+			{
+				Debug.Log($"Sensor detected a black line! sdf {string.Join(", ", sensor.GetRecentReadings())}");
+
+				wasOnLine = true;
+			}
+			else if (wasOnLine && !(sensor.GetReflectedLightAndCheckBlackWhite() < 0.4f))
+			{
+				lineCount++;
+				wasOnLine = false;
+				Debug.Log("Sensor detected a black line!");
+			}
 		}
 
 
 		public override void Update()
 		{
 
-			bool isSensor1OnLine = Sensor1.GetReflectedLightAndCheckBlackWhite() < 0.4f;
-			bool isSensor2OnLine = Sensor2.GetReflectedLightAndCheckBlackWhite() < 0.4f;
-
+			//Debug.Log("Sensor1: " + Sensor1.GetReflectedLightAndCheckBlackWhite() + ", Sensor2: " + Sensor2.GetReflectedLightAndCheckBlackWhite());
 			// Debounce mechanism for Sensor1
-			if (!Sensor1WasOnLine && isSensor1OnLine)
-			{
-				Sensor1WasOnLine = true;
-			}
-			else if (Sensor1WasOnLine && !isSensor1OnLine)
-			{
-				Sensor1LineCount++;
-				Sensor1WasOnLine = false;
-			}
 
-			// Debounce mechanism for Sensor2
-			if (!Sensor2WasOnLine && isSensor2OnLine)
-			{
-				Sensor2WasOnLine = true;
-			}
-			else if (Sensor2WasOnLine && !isSensor2OnLine)
-			{
-				Sensor2LineCount++;
-				Sensor2WasOnLine = false;
-				Debug.Log("Sensor2 detected a black line!");
-			}
+			DidSensorCrossALine(SensorDiagonal1, ref SensorDiagonal1WasOnLine, ref SensorDiagonal1Count);
+			DidSensorCrossALine(SensorDiagonal2, ref SensorDiagonal2WasOnLine, ref SensorDiagonal2Count);
+			DidSensorCrossALine(SensorDiagonal3, ref SensorDiagonal3WasOnLine, ref SensorDiagonal3Count);
+			DidSensorCrossALine(SensorDiagonal4, ref SensorDiagonal4WasOnLine, ref SensorDiagonal4Count);
+
+			DidSensorCrossALine(SensorHorizontal1, ref SensorHorizontal1WasOnLine, ref SensorHorizontal1Count);
+			DidSensorCrossALine(SensorHorizontal2, ref SensorHorizontal2WasOnLine, ref SensorHorizontal2Count);
+
+			DidSensorCrossALine(SensorVertical1, ref SensorVertical1WasOnLine, ref SensorVertical1Count);
+			DidSensorCrossALine(SensorVertical2, ref SensorVertical2WasOnLine, ref SensorVertical2Count);
+
+			DidSensorCrossALine(SensorMiddle1, ref SensorMiddle1WasOnLine, ref SensorMiddle1Count);
 
 			if (this.CurrentNode.OutgoingPathsScanned) return;
 
