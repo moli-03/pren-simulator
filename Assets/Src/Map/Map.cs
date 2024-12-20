@@ -121,6 +121,7 @@ public class Map : MonoBehaviour
 		// Choose a random target
         List<Node> potentialEndNodes = new List<Node> { E, H, G };
         endNode = potentialEndNodes[Random.Range(0, potentialEndNodes.Count)];
+		endNode.IsEndpoint = true;
 		UIController.Instance.UpdateTarget(endNode);
 
 		this.RandomizePath();

@@ -6,6 +6,8 @@ public class Node : MonoBehaviour
 {
 	public int Index { get; set; }
 
+	public bool IsEndpoint = false;
+
 	void Start() {
 		this.transform.localScale = new Vector3(Constants.NODE_RADIUS * 2, 0.001f, Constants.NODE_RADIUS * 2);
 	}
