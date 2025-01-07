@@ -17,12 +17,12 @@ public class Map : MonoBehaviour
     private Camera MainCamera;
     public static readonly int NODE_COUNT = 8;
     private int maxBarricadeCount = 4;
-	private int minBarricadeCount = 2;
+    private int minBarricadeCount = 2;
     private int maxConeCount = 3;
-	private int minConeCount = 1;
+    private int minConeCount = 1;
     private int maxRemovePathCount = 4;
-	private int minRemovePathCount = 0;
-	private Vector3 coneScale = new Vector3(13.5f, 13.5f, 13.5f);
+    private int minRemovePathCount = 0;
+    private Vector3 coneScale = new Vector3(13.5f, 13.5f, 13.5f);
     private Node endNode;
 
 
@@ -60,15 +60,15 @@ public class Map : MonoBehaviour
 
         // Create all node instances on their default positions
         Node A = Instantiate(NodePrefab, new Vector3(2, 0, 0.1f), Quaternion.identity).GetComponent<Node>().SetLabel("G");
-        Node B = Instantiate(NodePrefab, new Vector3(0.5f, 0, 0.5f), Quaternion.identity).GetComponent<Node>();
-        Node C = Instantiate(NodePrefab, new Vector3(3.5f, 0, 0.5f), Quaternion.identity).GetComponent<Node>();
-        Node D = Instantiate(NodePrefab, new Vector3(1.5f, 0, 1f), Quaternion.identity).GetComponent<Node>();
+        Node B = Instantiate(NodePrefab, new Vector3(0.5f, 0, 0.5f), Quaternion.identity).GetComponent<Node>().SetLabel("1");
+        Node C = Instantiate(NodePrefab, new Vector3(3.5f, 0, 0.5f), Quaternion.identity).GetComponent<Node>().SetLabel("2");
+        Node D = Instantiate(NodePrefab, new Vector3(1.5f, 0, 1f), Quaternion.identity).GetComponent<Node>().SetLabel("3");
         Node E = Instantiate(NodePrefab, new Vector3(0.5f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("A");
-        Node F = Instantiate(NodePrefab, new Vector3(1.5f, 0, 1.5f), Quaternion.identity).GetComponent<Node>();
+        Node F = Instantiate(NodePrefab, new Vector3(1.5f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("4");
         Node G = Instantiate(NodePrefab, new Vector3(3.25f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("C");
         Node H = Instantiate(NodePrefab, new Vector3(2f, 0, 2.75f), Quaternion.identity).GetComponent<Node>().SetLabel("B");
 
-		// Create start
+        // Create start
         Node start = Instantiate(NodePrefab, new Vector3(2, 0, -0.4f), Quaternion.identity).GetComponent<Node>().SetLabel("S");
         this.AddNode(start);
 
@@ -118,13 +118,20 @@ public class Map : MonoBehaviour
         // From G
         this.AddPath(G, H);
 
-		// Choose a random target
+        // Choose a random target
         List<Node> potentialEndNodes = new List<Node> { E, H, G };
         endNode = potentialEndNodes[Random.Range(0, potentialEndNodes.Count)];
-		endNode.IsEndpoint = true;
-		UIController.Instance.UpdateTarget(endNode);
+        endNode.IsEndpoint = true;
+        VehicleController vehicleController = vehicle.GetComponent<VehicleController>();
 
-		this.RandomizePath();
+        // Set the endNode in the VehicleController
+        if (vehicleController != null)
+        {
+            vehicleController.SetEndNode(endNode);
+        }
+        UIController.Instance.UpdateTarget(endNode);
+
+        this.RandomizePath();
 
         // this.removeRandomPaths();
         // this.addRandomCones();
@@ -135,6 +142,7 @@ public class Map : MonoBehaviour
             if (path == null) continue;
             path.UpdatePosition();
         }
+        DisplaySignedAngles();
     }
 
 
@@ -146,17 +154,18 @@ public class Map : MonoBehaviour
         {
             if (Physics.Raycast(this.MainCamera.ScreenPointToRay(Input.mousePosition), out RaycastHit initialHit, Mathf.Infinity))
             {
-				if (initialHit.collider.TryGetComponent(out Node node)) {
-                	// Mark as selected
-                	initialHit.collider.GetComponent<Renderer>().material.color = Color.cyan;
+                if (initialHit.collider.TryGetComponent(out Node node))
+                {
+                    // Mark as selected
+                    initialHit.collider.GetComponent<Renderer>().material.color = Color.cyan;
 
-                	// Store drag info
-                	this.CurrentDrag = new DragInfo()
-                	{
-                    	Target = initialHit.collider.gameObject.GetComponent<Node>(),
-                    	IsDragging = true
-                	};
-				}
+                    // Store drag info
+                    this.CurrentDrag = new DragInfo()
+                    {
+                        Target = initialHit.collider.gameObject.GetComponent<Node>(),
+                        IsDragging = true
+                    };
+                }
             }
         }
 
@@ -227,243 +236,321 @@ public class Map : MonoBehaviour
         }
     }
 
+    private void DisplaySignedAngles()
+    {
+        Vector2 referenceDirection = Vector2.down; // Downward direction as reference (0, -1)
 
-	private void RandomizePath() {
+        foreach (Node node in Nodes)
+        {
+            Debug.Log($"Node {node.GetLabel()}:");
 
-		List<List<Node>> allPaths = new List<List<Node>>();
-		List<Node> currentPath = new List<Node>();
+            // Find all connected paths
+            for (int i = 0; i < PathMatrix.GetLength(1); i++)
+            {
+                Path path = PathMatrix[node.Index, i];
+                if (path == null) continue;
 
-		bool[] visitedNodes = new bool[this.Nodes.Count];
-		FindAllPaths(this.Nodes.First(), this.endNode, visitedNodes, currentPath, allPaths);
+                // Get the other node to calculate the direction vector
+                Node otherNode = path.StartNode == node ? path.EndNode : path.StartNode;
+                Vector3 direction3D = otherNode.transform.position - node.transform.position;
 
-		// Choose a random path
-		List<Node> randomPath = allPaths[Random.Range(0, allPaths.Count - 1)];
+                // Convert to 2D (XZ plane) for angle calculation
+                Vector2 direction2D = new Vector2(direction3D.x, direction3D.z).normalized;
 
-		// The actual path
-		List<Node> path = new List<Node>();
+                // Calculate the signed angle
+                float angle = Vector2.SignedAngle(referenceDirection, direction2D);
 
-		// We need to backtrack now to make sure we don't make too complicated paths leading
-		// to less positions we can place cones
-		int i = randomPath.Count - 1;
-		while (i >= 0) {
+                // Normalize to go from 0 to 680 to sort them by direction
+                float normalizedAngle = angle < 0 ?  360 - (angle * -1) + 360 : angle;
 
-			Node current = randomPath[i];
-			path.Add(current);
+                // Log the angle
+                Debug.Log($"  Path to Node {otherNode.GetLabel()} - Signed Angle: {angle}°, Normalized Angle: {normalizedAngle}°");
 
-			bool updatedIndex = false;
-			for (int j = 0; j < this.PathMatrix.GetLength(0); j++) {
+                // Place the text at the position where the path starts at the node
+                Vector3 textPosition = node.transform.position + direction3D.normalized * 0.1f; // Offset slightly from the node
 
-				// No path?
-				if (this.PathMatrix[current.Index, j] == null || j == current.Index) {
-					continue;
-				}
-
-				Node other = this.Nodes[j];
-				int firstIndex = randomPath.IndexOf(other);
-
-				// Check if the time we visit the node is the previous node. If not -> update path
-				if (firstIndex >= 0 && firstIndex < i) {
-					updatedIndex = true;
-					i = firstIndex;
-					continue;
-				}
-			}
-
-			if (!updatedIndex) {
-				i--;
-			}
-		}
-
-		// We filled it up end -> front so we have to reverse it
-		path.Reverse();
-
-		// Visualize it
-		this.DrawDebugPath(path, Color.magenta, 0.1f);
-
-		// Get all nodes that are not on the path
-		List<Node> nodesNotOnPath = this.Nodes.Skip(1).Where(node => !path.Contains(node)).OrderBy(_ => Random.value).ToList();
-
-		// Place some cones on them
-		List<Node> nodesWithCones = this.PlaceConesRandom(nodesNotOnPath);
-
-		// Remove some paths
-		this.RemoveRandomPaths(path);
-
-		// Place some random barriers
-		this.PlaceBarriersRandom(nodesWithCones);
-	}
+                // Create a text object
+                GameObject angleTextObject = new GameObject("AngleText");
+                angleTextObject.transform.position = textPosition; // Slightly above ground for better visibility
+                angleTextObject.transform.rotation = Quaternion.Euler(90, 0, 0); // Rotate to make it readable from above
+                angleTextObject.transform.localScale = new Vector3(0.3f, 0.3f, 0.3f); // Scale down for better fit
+                TextMesh textMesh = angleTextObject.AddComponent<TextMesh>();
+                textMesh.text = $"{normalizedAngle:F1}°"; // Format angle to 1 decimal place
+                textMesh.characterSize = 0.1f;
+                textMesh.anchor = TextAnchor.MiddleCenter;
+                textMesh.alignment = TextAlignment.Center;
+                textMesh.color = Color.black;
+            }
+        }
+    }
 
 
-	private void RemoveRandomPaths(List<Node> path) {
 
-		// Get all paths that are required to make the path because we cant delete those
-		List<Path> requiredPaths = new List<Path>();
-		Node prev = path[0];
+    private void RandomizePath()
+    {
 
-		for (int i = 1; i < path.Count; i++) {
-			requiredPaths.Add(this.PathMatrix[prev.Index, path[i].Index]);
-			prev = path[i];
-		}
+        List<List<Node>> allPaths = new List<List<Node>>();
+        List<Node> currentPath = new List<Node>();
 
-		// Get all the paths we can delete
-		List<Path> deletablePaths = new List<Path>();
-		for (int i = 0; i < this.PathMatrix.GetLength(0); i++) {
-			for (int j = 0; j < this.PathMatrix.GetLength(1); j++) {
+        bool[] visitedNodes = new bool[this.Nodes.Count];
+        FindAllPaths(this.Nodes.First(), this.endNode, visitedNodes, currentPath, allPaths);
 
-				if (this.PathMatrix[i, j] == null) {
-					continue;
-				}
+        // Choose a random path
+        List<Node> randomPath = allPaths[Random.Range(0, allPaths.Count - 1)];
 
-				if (!requiredPaths.Contains(this.PathMatrix[i, j])) {
-					deletablePaths.Add(this.PathMatrix[i, j]);
-				}
-			}
-		}
+        // The actual path
+        List<Node> path = new List<Node>();
 
-		// Randomize the list
-		deletablePaths = deletablePaths.OrderBy(_ => Random.value).ToList();
+        // We need to backtrack now to make sure we don't make too complicated paths leading
+        // to less positions we can place cones
+        int i = randomPath.Count - 1;
+        while (i >= 0)
+        {
 
-		// Random amount of paths we delete
-		int deletePathCount = Random.Range(this.minRemovePathCount, this.maxRemovePathCount);
-		deletePathCount = Mathf.Clamp(deletePathCount, 0, deletablePaths.Count - 1);
+            Node current = randomPath[i];
+            path.Add(current);
 
-		Debug.Log("Removing " + deletePathCount + " paths");
-		
-		for (int i = 0; i < deletePathCount; i++) {
-			this.RemovePath(deletablePaths[i]);
-		}
-	}
+            bool updatedIndex = false;
+            for (int j = 0; j < this.PathMatrix.GetLength(0); j++)
+            {
+
+                // No path?
+                if (this.PathMatrix[current.Index, j] == null || j == current.Index)
+                {
+                    continue;
+                }
+
+                Node other = this.Nodes[j];
+                int firstIndex = randomPath.IndexOf(other);
+
+                // Check if the time we visit the node is the previous node. If not -> update path
+                if (firstIndex >= 0 && firstIndex < i)
+                {
+                    updatedIndex = true;
+                    i = firstIndex;
+                    continue;
+                }
+            }
+
+            if (!updatedIndex)
+            {
+                i--;
+            }
+        }
+
+        // We filled it up end -> front so we have to reverse it
+        path.Reverse();
+
+        // Visualize it
+        this.DrawDebugPath(path, Color.magenta, 0.1f);
+
+        // Get all nodes that are not on the path
+        List<Node> nodesNotOnPath = this.Nodes.Skip(1).Where(node => !path.Contains(node)).OrderBy(_ => Random.value).ToList();
+
+        // Place some cones on them
+        List<Node> nodesWithCones = this.PlaceConesRandom(nodesNotOnPath);
+
+        // Remove some paths
+        this.RemoveRandomPaths(path);
+
+        // Place some random barriers
+        this.PlaceBarriersRandom(nodesWithCones);
+    }
 
 
-	private void PlaceBarriersRandom(List<Node> nodesWithCones) {
+    private void RemoveRandomPaths(List<Node> path)
+    {
 
-		List<Node> blockedNodes = new List<Node>(nodesWithCones);
-		blockedNodes.Add(this.Nodes[0]); // Add the start node
+        // Get all paths that are required to make the path because we cant delete those
+        List<Path> requiredPaths = new List<Path>();
+        Node prev = path[0];
 
-		// Get all paths on which we could place a barrier
-		List<Path> possiblePaths = new List<Path>();
-		for (int i = 0; i < this.PathMatrix.GetLength(0); i++) {
-			for (int j = 0; j < this.PathMatrix.GetLength(1); j++) {
+        for (int i = 1; i < path.Count; i++)
+        {
+            requiredPaths.Add(this.PathMatrix[prev.Index, path[i].Index]);
+            prev = path[i];
+        }
 
-				Path current = this.PathMatrix[i, j];
+        // Get all the paths we can delete
+        List<Path> deletablePaths = new List<Path>();
+        for (int i = 0; i < this.PathMatrix.GetLength(0); i++)
+        {
+            for (int j = 0; j < this.PathMatrix.GetLength(1); j++)
+            {
 
-				if (current == null) {
-					continue;
-				}
+                if (this.PathMatrix[i, j] == null)
+                {
+                    continue;
+                }
 
-				// Don't add twice
-				if (possiblePaths.Contains(current)) {
-					continue;
-				}
+                if (!requiredPaths.Contains(this.PathMatrix[i, j]))
+                {
+                    deletablePaths.Add(this.PathMatrix[i, j]);
+                }
+            }
+        }
 
-				// Add to possible paths if the start and end node are not blocked
-				if (!blockedNodes.Contains(current.StartNode) && !blockedNodes.Contains(current.EndNode)) {
-					possiblePaths.Add(current);
-				}
-			}
-		}
+        // Randomize the list
+        deletablePaths = deletablePaths.OrderBy(_ => Random.value).ToList();
 
-		int barrierCount = Random.Range(this.minBarricadeCount, this.maxBarricadeCount);
-		barrierCount = Mathf.Clamp(barrierCount, 0, possiblePaths.Count - 1);
+        // Random amount of paths we delete
+        int deletePathCount = Random.Range(this.minRemovePathCount, this.maxRemovePathCount);
+        deletePathCount = Mathf.Clamp(deletePathCount, 0, deletablePaths.Count - 1);
 
-		// Randomize paths
-		possiblePaths = possiblePaths.OrderBy(_ => Random.value).ToList();
+        Debug.Log("Removing " + deletePathCount + " paths");
 
-		// Place the barriers
-		for (int i = 0; i < barrierCount; i++) {
+        for (int i = 0; i < deletePathCount; i++)
+        {
+            this.RemovePath(deletablePaths[i]);
+        }
+    }
 
-			Path path = possiblePaths[i];
+
+    private void PlaceBarriersRandom(List<Node> nodesWithCones)
+    {
+
+        List<Node> blockedNodes = new List<Node>(nodesWithCones);
+        blockedNodes.Add(this.Nodes[0]); // Add the start node
+
+        // Get all paths on which we could place a barrier
+        List<Path> possiblePaths = new List<Path>();
+        for (int i = 0; i < this.PathMatrix.GetLength(0); i++)
+        {
+            for (int j = 0; j < this.PathMatrix.GetLength(1); j++)
+            {
+
+                Path current = this.PathMatrix[i, j];
+
+                if (current == null)
+                {
+                    continue;
+                }
+
+                // Don't add twice
+                if (possiblePaths.Contains(current))
+                {
+                    continue;
+                }
+
+                // Add to possible paths if the start and end node are not blocked
+                if (!blockedNodes.Contains(current.StartNode) && !blockedNodes.Contains(current.EndNode))
+                {
+                    possiblePaths.Add(current);
+                }
+            }
+        }
+
+        int barrierCount = Random.Range(this.minBarricadeCount, this.maxBarricadeCount);
+        barrierCount = Mathf.Clamp(barrierCount, 0, possiblePaths.Count - 1);
+
+        // Randomize paths
+        possiblePaths = possiblePaths.OrderBy(_ => Random.value).ToList();
+
+        // Place the barriers
+        for (int i = 0; i < barrierCount; i++)
+        {
+
+            Path path = possiblePaths[i];
 
             // Calculate midpoint
-			Vector3 direction = path.EndNode.transform.position - path.StartNode.transform.position;
-			Quaternion pathRotation = Quaternion.LookRotation(direction);
-			float distanceFromStart = Mathf.Clamp(direction.magnitude * Random.Range(0f, 1f), Constants.BARRIER_MIN_DISTANCE_FROM_NODE, direction.magnitude - Constants.BARRIER_MIN_DISTANCE_FROM_NODE);
+            Vector3 direction = path.EndNode.transform.position - path.StartNode.transform.position;
+            Quaternion pathRotation = Quaternion.LookRotation(direction);
+            float distanceFromStart = Mathf.Clamp(direction.magnitude * Random.Range(0f, 1f), Constants.BARRIER_MIN_DISTANCE_FROM_NODE, direction.magnitude - Constants.BARRIER_MIN_DISTANCE_FROM_NODE);
             Vector3 position = path.StartNode.transform.position + direction.normalized * distanceFromStart;
 
-			// We have to spin it a little
-			Quaternion rotation = Quaternion.Euler(new Vector3(-90f, pathRotation.eulerAngles.y, 0));
+            // We have to spin it a little
+            Quaternion rotation = Quaternion.Euler(new Vector3(-90f, pathRotation.eulerAngles.y, 0));
 
-			// The middle of the prefab is on the left of the barrier
-			position -= pathRotation * new Vector3(0.076f, 0, 0);
+            // The middle of the prefab is on the left of the barrier
+            position -= pathRotation * new Vector3(0.076f, 0, 0);
 
             // Instantiate barrier with calculated position and rotation
             GameObject barrier = Instantiate(BarrierPrefab, position, rotation);
-			barrier.AddComponent<Moveable>();
-		}
-	}
+            barrier.AddComponent<Moveable>();
+        }
+    }
 
 
-	private List<Node> PlaceConesRandom(List<Node> nodes) {
+    private List<Node> PlaceConesRandom(List<Node> nodes)
+    {
 
-		// Take a random amount of cones
-		int coneCount = Random.Range(this.minConeCount, this.maxConeCount);
+        // Take a random amount of cones
+        int coneCount = Random.Range(this.minConeCount, this.maxConeCount);
 
-		// Make sure we dont want to place more cones then there are empty nodes
-		coneCount = Mathf.Clamp(coneCount, 0, nodes.Count);
+        // Make sure we dont want to place more cones then there are empty nodes
+        coneCount = Mathf.Clamp(coneCount, 0, nodes.Count);
 
-		// Store all blocked nodes
-		List<Node> nodesWithCone = new List<Node>();
+        // Store all blocked nodes
+        List<Node> nodesWithCone = new List<Node>();
 
-		for (int i = 0; i < coneCount; i++) {
-			nodesWithCone.Add(nodes[i]);
+        for (int i = 0; i < coneCount; i++)
+        {
+            nodesWithCone.Add(nodes[i]);
 
-			GameObject cone = Instantiate(ConePrefab, nodes[i].transform.position, Quaternion.Euler(0, Random.Range(0, 360), 0));
+            GameObject cone = Instantiate(ConePrefab, nodes[i].transform.position, Quaternion.Euler(0, Random.Range(0, 360), 0));
             cone.transform.localScale = coneScale;
             cone.transform.rotation = Quaternion.Euler(-90, 0, 0); // Rotate by -90 degrees on the X-axis
-			cone.AddComponent<Moveable>();
-			cone.AddComponent<MeshCollider>();
+            cone.AddComponent<Moveable>();
+            cone.AddComponent<MeshCollider>();
 
-		}
+        }
 
-		return nodesWithCone;
-	}
-
-
-	private void DrawDebugPath(List<Node> path, Color col, float height) {
-
-		// Debug only
-		for (int i = 0; i < path.Count; i++) {
-			Node node = path[i];
-			Vector3 position = new Vector3(node.transform.position.x, height, node.transform.position.z);
-			Draw.DrawCircle(position, col);
-
-			// Draw path to previous node
-			if (i > 0) {
-				Node prev = path[i - 1];
-				Vector3 direction = prev.transform.position - node.transform.position;
-				direction = new Vector3(direction.x, 0, direction.z);
-
-				Draw.DrawLine(position, direction, col);
-			}
-		}
-	}
+        return nodesWithCone;
+    }
 
 
-	private void FindAllPaths(Node current, Node end, bool[] visitedNodes, List<Node> currentPath, List<List<Node>> allPaths) {
+    private void DrawDebugPath(List<Node> path, Color col, float height)
+    {
 
-		// Add current node to path
-		visitedNodes[current.Index] = true;
-		currentPath.Add(current);
+        // Debug only
+        for (int i = 0; i < path.Count; i++)
+        {
+            Node node = path[i];
+            Vector3 position = new Vector3(node.transform.position.x, height, node.transform.position.z);
+            Draw.DrawCircle(position, col);
 
-		// If reached the end node, save the current path
-		if (current == end) {
-			allPaths.Add(new List<Node>(currentPath));
-		}
-		else {
-			for (int i = 0; i < this.PathMatrix.GetLength(1); i++) {
+            // Draw path to previous node
+            if (i > 0)
+            {
+                Node prev = path[i - 1];
+                Vector3 direction = prev.transform.position - node.transform.position;
+                direction = new Vector3(direction.x, 0, direction.z);
 
-				Path path = this.PathMatrix[current.Index, i];
-				if (path == null || visitedNodes[i]) continue;
+                Draw.DrawLine(position, direction, col);
+            }
+        }
+    }
 
-				Node other = path.StartNode == current ? path.EndNode : path.StartNode;
-				FindAllPaths(other, end, visitedNodes, currentPath, allPaths);
-			}
-		}
+
+    private void FindAllPaths(Node current, Node end, bool[] visitedNodes, List<Node> currentPath, List<List<Node>> allPaths)
+    {
+
+        // Add current node to path
+        visitedNodes[current.Index] = true;
+        currentPath.Add(current);
+
+        // If reached the end node, save the current path
+        if (current == end)
+        {
+            allPaths.Add(new List<Node>(currentPath));
+        }
+        else
+        {
+            for (int i = 0; i < this.PathMatrix.GetLength(1); i++)
+            {
+
+                Path path = this.PathMatrix[current.Index, i];
+                if (path == null || visitedNodes[i]) continue;
+
+                Node other = path.StartNode == current ? path.EndNode : path.StartNode;
+                FindAllPaths(other, end, visitedNodes, currentPath, allPaths);
+            }
+        }
 
         // Backtrack: remove the current node
-		visitedNodes[current.Index] = false;
+        visitedNodes[current.Index] = false;
         currentPath.RemoveAt(currentPath.Count - 1);
-	}
+    }
 
     private void addRandomBarricade()
     {
@@ -480,22 +567,22 @@ public class Map : MonoBehaviour
         foreach (Path path in pathsWithBarricades)
         {
             // Calculate midpoint
-			Vector3 direction = path.EndNode.transform.position - path.StartNode.transform.position;
-			Quaternion pathRotation = Quaternion.LookRotation(direction);
-			float distanceFromStart = Mathf.Clamp(direction.magnitude * Random.Range(0f, 1f), Constants.BARRIER_MIN_DISTANCE_FROM_NODE, direction.magnitude - Constants.BARRIER_MIN_DISTANCE_FROM_NODE);
+            Vector3 direction = path.EndNode.transform.position - path.StartNode.transform.position;
+            Quaternion pathRotation = Quaternion.LookRotation(direction);
+            float distanceFromStart = Mathf.Clamp(direction.magnitude * Random.Range(0f, 1f), Constants.BARRIER_MIN_DISTANCE_FROM_NODE, direction.magnitude - Constants.BARRIER_MIN_DISTANCE_FROM_NODE);
             Vector3 position = path.StartNode.transform.position + direction.normalized * distanceFromStart;
 
-			// We have to spin it a little
-			Quaternion rotation = Quaternion.Euler(new Vector3(-90f, pathRotation.eulerAngles.y, 0));
+            // We have to spin it a little
+            Quaternion rotation = Quaternion.Euler(new Vector3(-90f, pathRotation.eulerAngles.y, 0));
 
-			// The middle of the prefab is on the right of the barrier
-			position -= pathRotation * new Vector3(-0.089f, 0, 0);
+            // The middle of the prefab is on the right of the barrier
+            position -= pathRotation * new Vector3(-0.089f, 0, 0);
 
             // Instantiate barrier with calculated position and rotation
             GameObject barrier = Instantiate(BarrierPrefab, position, rotation);
-			barrier.AddComponent<Moveable>();
-			barrier.AddComponent<MeshCollider>();
-	}
+            barrier.AddComponent<Moveable>();
+            barrier.AddComponent<MeshCollider>();
+        }
     }
 
     private bool IsPathAvailable(Node start, Node end)
@@ -533,10 +620,10 @@ public class Map : MonoBehaviour
         Node robotStartNode = Nodes.FirstOrDefault(n => n.GetLabel() == "G");
         Node startNode = Nodes.FirstOrDefault(n => n.GetLabel() == "S");
         List<Node> excludeNodes = new List<Node>
-		{
-			startNode,
-			robotStartNode
-		};
+        {
+            startNode,
+            robotStartNode
+        };
 
         // Collect eligible nodes excluding the start node (S)
         List<Node> eligibleNodes = Nodes.Except(excludeNodes).ToList();
@@ -547,10 +634,10 @@ public class Map : MonoBehaviour
 
         // Ensure at least one of E, H, or G is not covered
         List<Node> criticalNodes = new List<Node> {
-        	Nodes.FirstOrDefault(n => n.GetLabel() == "A"),
-        	Nodes.FirstOrDefault(n => n.GetLabel() == "B"),
-        	Nodes.FirstOrDefault(n => n.GetLabel() == "C")
-    	};
+            Nodes.FirstOrDefault(n => n.GetLabel() == "A"),
+            Nodes.FirstOrDefault(n => n.GetLabel() == "B"),
+            Nodes.FirstOrDefault(n => n.GetLabel() == "C")
+        };
 
         bool allCriticalCovered = criticalNodes.All(node => nodesWithCones.Contains(node));
         if (allCriticalCovered)
@@ -566,8 +653,8 @@ public class Map : MonoBehaviour
             GameObject cone = Instantiate(ConePrefab, node.transform.position, Quaternion.identity);
             cone.transform.localScale = coneScale;
             cone.transform.rotation = Quaternion.Euler(-90, 0, 0); // Rotate by -90 degrees on the X-axis
-			cone.AddComponent<Moveable>();
-			cone.AddComponent<MeshCollider>();
+            cone.AddComponent<Moveable>();
+            cone.AddComponent<MeshCollider>();
         }
     }
 
@@ -587,7 +674,7 @@ public class Map : MonoBehaviour
 
         // Identify the start and first nodes
         Node startNode = Nodes.FirstOrDefault(n => n.GetLabel() == "S");
-        Node firstNode = Nodes.FirstOrDefault(n => n.GetLabel() == "G"); 
+        Node firstNode = Nodes.FirstOrDefault(n => n.GetLabel() == "G");
 
 
         int removedCount = 0;

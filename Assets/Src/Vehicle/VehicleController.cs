@@ -18,6 +18,20 @@ public class VehicleController : MonoBehaviour
 	public List<MapNode> NodeStack = new List<MapNode>();
 
 	[HideInInspector]
+
+	public Node EndNode { get; set; }
+
+	public void SetEndNode(Node node)
+	{
+		this.EndNode = node;
+		Debug.Log($"EndNode set to: {this.EndNode.GetLabel()}");
+	}
+
+	[HideInInspector]
+	public bool PreferLeft { get; set; } = true;
+
+
+	[HideInInspector]
 	public MapPath CurrentPath = null;
 
 	[HideInInspector]
@@ -34,7 +48,7 @@ public class VehicleController : MonoBehaviour
 
 	[HideInInspector]
 	public DistanceSensor BottomDistanceSensor { get; private set; }
-	
+
 	[HideInInspector]
 	public DistanceSensor TopDistanceSensor { get; private set; }
 
@@ -42,7 +56,9 @@ public class VehicleController : MonoBehaviour
 	public float Orientation => this.Drive.Orientation;
 	public Vector2 Forward => this.Drive.Forward;
 
-	public void SetState(VehicleState state) {
+	
+	public void SetState(VehicleState state)
+	{
 		this.State = state;
 
 		UIController.Instance.UpdateState(state);
@@ -51,13 +67,13 @@ public class VehicleController : MonoBehaviour
 	}
 
 
-    // Start is called before the first frame update
-    void Start()
-    {
+	// Start is called before the first frame update
+	void Start()
+	{
 		Instance = this;
 		this.Drive = this.GetComponent<DifferentialDrive>();
 		this.Map = new VehicleMap();
-        this.SetState(new WaitingOnStartingPosition(this));
+		this.SetState(new WaitingOnStartingPosition(this));
 		this.SensorBoard = this.GetComponentInChildren<LineSensorBoard>();
 		this.BottomDistanceSensor = this.transform.Find("BottomDistanceSensor").GetComponent<DistanceSensor>();
 		this.TopDistanceSensor = this.transform.Find("TopDistanceSensor").GetComponent<DistanceSensor>();
@@ -65,15 +81,16 @@ public class VehicleController : MonoBehaviour
 		this.LineFollower = this.GetComponent<LineFollower>();
 		Minimap.Instance.Vehicle = this;
 		Minimap.Instance.SetStartingPosition(this.transform.position);
-    }
+	}
 
 
-    void FixedUpdate()
-    {
-        this.State.FixedUpdate();
-    }
+	void FixedUpdate()
+	{
+		this.State.FixedUpdate();
+	}
 
-	void Update() {
+	void Update()
+	{
 		this.State.Update();
 	}
 
