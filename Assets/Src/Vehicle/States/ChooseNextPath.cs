@@ -63,25 +63,25 @@ namespace Assets.Src.Vehicle.States
 		{
 			List<MapPath> notVisitedPaths = this.GetNotVisitedPaths();
 
-			// Determine the path based on the end node's label
-			string endNodeLabel = this.Vehicle.EndNode.GetLabel();
-
 			if (notVisitedPaths.Count == 0)
 			{
 				GoBack();
 				return;
 			}
 
+			// Determine the path based on the end node's label
+			string endNodeLabel = this.Vehicle.EndNode.GetLabel();
+
 			switch (endNodeLabel)
 			{
 				case "A":
-					FollowRightmostPath(notVisitedPaths);
+					FollowLeftmostPath(notVisitedPaths);
 					break;
 				case "B":
 					FollowMiddlePath(notVisitedPaths);
 					break;
 				case "C":
-					FollowLeftmostPath(notVisitedPaths);
+					FollowRightmostPath(notVisitedPaths);
 					break;
 				default:
 					Debug.Log("Random from " + notVisitedPaths.Count + " possible positions");
@@ -94,98 +94,46 @@ namespace Assets.Src.Vehicle.States
 
 		private void FollowLeftmostPath(List<MapPath> paths)
 		{
-			// Define a reference direction (e.g., upward direction)
-			Vector2 referenceDirection = Vector2.down;
-
 			// Sort paths by the angle to the reference direction in ascending order
 			MapPath selectedPath = paths
 				.OrderBy(path =>
 				{
 					Vector2 outgoingPosition = path.GetOutgoingPositionFor(this.CurrentNode).Value;
 					// Calculate the angle relative to the reference direction
-					float angle = Vector2.SignedAngle(referenceDirection, outgoingPosition);
-					float normalizedAngle = (angle < 0 ? 360 - (angle * -1) + 360 : angle);
-
-					// Normalize the angle to the range [0, 360)
-					Debug.Log($"Angle: {normalizedAngle}");
-					return normalizedAngle;
+					float angle = Vector2.SignedAngle(this.Vehicle.Drive.Forward, outgoingPosition) - 180;
+					return Mathf.Abs(angle);
 				})
 				.First();
-			float angle = Vector2.SignedAngle(referenceDirection, selectedPath.GetOutgoingPositionFor(this.CurrentNode).Value);
+			
 			// Choose the selected path
 			ChoosePath(selectedPath);
 		}
 
 		private void FollowMiddlePath(List<MapPath> paths)
 		{
-			Vector2 referenceDirection = Vector2.down;
-
-			// Sort paths by angle relative to the reversed incoming direction
-			List<MapPath> sortedPaths = paths
-				.OrderBy(path =>
-				{
-					Vector2 outgoingPosition = path.GetOutgoingPositionFor(this.CurrentNode).Value;
-
-					// Normalize the angle to ensure counterclockwise rotation
-					float angle = Vector2.SignedAngle(referenceDirection, outgoingPosition);
-					// Normalize the angle to the range [0, 360)
-					float normalizedAngle = (angle < 0 ? 360 - (angle * -1) + 360 : angle);
-
-					Debug.Log($"Angle: {normalizedAngle}");
-					return normalizedAngle;
-				})
-				.ToList();
-
-			// Calculate the middle index
-			int middleIndex = sortedPaths.Count / 2;
-
-			MapPath selectedPath = null;
-			// If there are an even number of paths, choose the path to the left or right of the middle path
-			if (sortedPaths.Count % 2 == 0)
+			if (this.Vehicle.PreferLeft)
 			{
-				if (this.Vehicle.PreferLeft)
-				{
-					// Choose the path to the left of the middle path
-					selectedPath = sortedPaths[middleIndex - 1];
-				}
-				else
-				{
-					// Choose the path to the right of the middle path
-					selectedPath = sortedPaths[middleIndex + 1];
-				}
-				this.Vehicle.PreferLeft = !this.Vehicle.PreferLeft;
+				this.FollowLeftmostPath(paths);
 			}
 			else
 			{
-				// Choose the middle path
-				selectedPath = sortedPaths[middleIndex];
+				this.FollowRightmostPath(paths);
 			}
-
-			// Choose the selected path
-			ChoosePath(selectedPath);
+			this.Vehicle.PreferLeft = !this.Vehicle.PreferLeft;
 		}
 
 		private void FollowRightmostPath(List<MapPath> paths)
 		{
-			// Define a reference direction (e.g., upward direction)
-			Vector2 referenceDirection = Vector2.down;
-
 			// Sort paths by the angle to the reference direction in ascending order
 			MapPath selectedPath = paths
 				.OrderBy(path =>
 				{
 					Vector2 outgoingPosition = path.GetOutgoingPositionFor(this.CurrentNode).Value;
 					// Calculate the angle relative to the reference direction
-					float angle = Vector2.SignedAngle(referenceDirection, outgoingPosition);
-					float normalizedAngle = (angle < 0 ? 360 - (angle * -1) + 360 : angle);
-
-					// Normalize the angle to the range [0, 360)
-					Debug.Log($"Angle: {normalizedAngle}");
-					return (normalizedAngle);
+					float angle = Vector2.SignedAngle(this.Vehicle.Drive.Forward, outgoingPosition) + 360;
+					return Mathf.Abs(angle);
 				})
-				.Last(); // Select the first path (smallest angle)
-
-			float angle = Vector2.SignedAngle(referenceDirection, selectedPath.GetOutgoingPositionFor(this.CurrentNode).Value);
+				.First();
 
 			// Choose the selected path
 			ChoosePath(selectedPath);

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Assets.Src.Util;
+using Assets.Src.Vehicle.States;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -62,7 +63,7 @@ public class Map : MonoBehaviour
         Node A = Instantiate(NodePrefab, new Vector3(2, 0, 0.1f), Quaternion.identity).GetComponent<Node>();
         Node B = Instantiate(NodePrefab, new Vector3(0.5f, 0, 0.5f), Quaternion.identity).GetComponent<Node>();
         Node C = Instantiate(NodePrefab, new Vector3(3.5f, 0, 0.5f), Quaternion.identity).GetComponent<Node>();
-        Node D = Instantiate(NodePrefab, new Vector3(1.75f, 0, 0.75f), Quaternion.identity).GetComponent<Node>();
+        Node D = Instantiate(NodePrefab, new Vector3(1.95f, 0, 0.95f), Quaternion.identity).GetComponent<Node>();
         Node E = Instantiate(NodePrefab, new Vector3(0.5f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("A");
         Node F = Instantiate(NodePrefab, new Vector3(1.5f, 0, 1.5f), Quaternion.identity).GetComponent<Node>();
         Node G = Instantiate(NodePrefab, new Vector3(3.25f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("C");
@@ -118,11 +119,16 @@ public class Map : MonoBehaviour
         // From G
         this.AddPath(G, H);
 
+        VehicleController vehicleController = vehicle.GetComponent<VehicleController>();
+
+		// For presentation
+		BuildPresentationMap(vehicleController);
+		return;
+
         // Choose a random target
         List<Node> potentialEndNodes = new List<Node> { E, H, G };
         endNode = potentialEndNodes[Random.Range(0, potentialEndNodes.Count)];
         endNode.IsEndpoint = true;
-        VehicleController vehicleController = vehicle.GetComponent<VehicleController>();
 
         // Set the endNode in the VehicleController
         if (vehicleController != null)
@@ -142,8 +148,43 @@ public class Map : MonoBehaviour
             if (path == null) continue;
             path.UpdatePosition();
         }
-        DisplaySignedAngles();
+        // DisplaySignedAngles();
     }
+
+
+	private void BuildPresentationMap(VehicleController vehicle) {
+
+		// C as target
+		Node endNode = this.Nodes.Find(node => node.GetLabel() == "C");
+		endNode.IsEndpoint = true;
+		UIController.Instance.UpdateTarget(endNode);
+		vehicle.SetEndNode(endNode);
+
+        foreach (Path path in this.PathMatrix)
+        {
+            if (path == null) continue;
+            path.UpdatePosition();
+        }
+
+		// Cone on c and b
+		Node nFrontLeft = this.Nodes[2];
+		Node nFrontRight = this.Nodes[3];
+		this.AddCone(nFrontLeft);
+		this.AddCone(nFrontRight);
+
+		// Remove paths
+		Node nStart = this.Nodes[1];
+		Node nMiddle = this.Nodes[4];
+
+		this.RemovePath(this.PathMatrix[nStart.Index, nFrontRight.Index]);
+		this.RemovePath(this.PathMatrix[nFrontLeft.Index, nMiddle.Index]);
+		this.RemovePath(this.PathMatrix[nMiddle.Index, endNode.Index]);
+
+		// Barrier
+		Node B = this.Nodes.Find(node => node.GetLabel() == "B");
+		this.AddBarrier(this.PathMatrix[nStart.Index, nMiddle.Index], 0.5f);
+		this.AddBarrier(this.PathMatrix[B.Index, endNode.Index], 0.75f);
+	}
 
 
     // Update is called once per frame
@@ -449,26 +490,40 @@ public class Map : MonoBehaviour
         // Place the barriers
         for (int i = 0; i < barrierCount; i++)
         {
-
             Path path = possiblePaths[i];
-
-            // Calculate midpoint
-            Vector3 direction = path.EndNode.transform.position - path.StartNode.transform.position;
-            Quaternion pathRotation = Quaternion.LookRotation(direction);
-            float distanceFromStart = Mathf.Clamp(direction.magnitude * Random.Range(0f, 1f), Constants.BARRIER_MIN_DISTANCE_FROM_NODE, direction.magnitude - Constants.BARRIER_MIN_DISTANCE_FROM_NODE);
-            Vector3 position = path.StartNode.transform.position + direction.normalized * distanceFromStart;
-
-            // We have to spin it a little
-            Quaternion rotation = Quaternion.Euler(new Vector3(-90f, pathRotation.eulerAngles.y, 0));
-
-            // The middle of the prefab is on the left of the barrier
-            position -= pathRotation * new Vector3(0.076f, 0, 0);
-
-            // Instantiate barrier with calculated position and rotation
-            GameObject barrier = Instantiate(BarrierPrefab, position, rotation);
-            barrier.AddComponent<Moveable>();
+			this.AddBarrier(path);
         }
     }
+
+
+	private void AddBarrier(Path path, float distancePercent = 0f) {
+
+        // Calculate midpoint
+        Vector3 direction = path.EndNode.transform.position - path.StartNode.transform.position;
+        Quaternion pathRotation = Quaternion.LookRotation(direction);
+		float distance = distancePercent > 0 ? distancePercent : Random.Range(0f, 1f);
+        float distanceFromStart = Mathf.Clamp(direction.magnitude * distance, Constants.BARRIER_MIN_DISTANCE_FROM_NODE, direction.magnitude - Constants.BARRIER_MIN_DISTANCE_FROM_NODE);
+        Vector3 position = path.StartNode.transform.position + direction.normalized * distanceFromStart;
+
+        // We have to spin it a little
+        Quaternion rotation = Quaternion.Euler(new Vector3(-90f, pathRotation.eulerAngles.y, 0));
+
+        // The middle of the prefab is on the left of the barrier
+        position -= pathRotation * new Vector3(0.076f, 0, 0);
+
+        // Instantiate barrier with calculated position and rotation
+        GameObject barrier = Instantiate(BarrierPrefab, position, rotation);
+        barrier.AddComponent<Moveable>();
+	}
+
+
+	private void AddCone(Node node) {
+        GameObject cone = Instantiate(ConePrefab, node.transform.position, Quaternion.Euler(0, Random.Range(0, 360), 0));
+        cone.transform.localScale = coneScale;
+        cone.transform.rotation = Quaternion.Euler(-90, 0, 0); // Rotate by -90 degrees on the X-axis
+        cone.AddComponent<Moveable>();
+        cone.AddComponent<MeshCollider>();
+	}
 
 
     private List<Node> PlaceConesRandom(List<Node> nodes)
@@ -486,13 +541,7 @@ public class Map : MonoBehaviour
         for (int i = 0; i < coneCount; i++)
         {
             nodesWithCone.Add(nodes[i]);
-
-            GameObject cone = Instantiate(ConePrefab, nodes[i].transform.position, Quaternion.Euler(0, Random.Range(0, 360), 0));
-            cone.transform.localScale = coneScale;
-            cone.transform.rotation = Quaternion.Euler(-90, 0, 0); // Rotate by -90 degrees on the X-axis
-            cone.AddComponent<Moveable>();
-            cone.AddComponent<MeshCollider>();
-
+			this.AddCone(nodes[i]);
         }
 
         return nodesWithCone;
