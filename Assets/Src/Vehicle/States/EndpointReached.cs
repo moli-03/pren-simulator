@@ -13,6 +13,8 @@ namespace Assets.Src.Vehicle.States {
 		{
 			// Start spinning very fast
 			this.Vehicle.Drive.TurnRightOnSpot(1f);
+
+			UIController.Instance.StopTimer();
 		}
 	}
 
