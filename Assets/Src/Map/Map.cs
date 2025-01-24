@@ -59,17 +59,17 @@ public class Map : MonoBehaviour
         this.MainCamera = Camera.main;
 
         // Create all node instances on their default positions
-        Node A = Instantiate(NodePrefab, new Vector3(2, 0, 0.1f), Quaternion.identity).GetComponent<Node>().SetLabel("G");
-        Node B = Instantiate(NodePrefab, new Vector3(0.5f, 0, 0.5f), Quaternion.identity).GetComponent<Node>().SetLabel("1");
-        Node C = Instantiate(NodePrefab, new Vector3(3.5f, 0, 0.5f), Quaternion.identity).GetComponent<Node>().SetLabel("2");
-        Node D = Instantiate(NodePrefab, new Vector3(1.5f, 0, 1f), Quaternion.identity).GetComponent<Node>().SetLabel("3");
+        Node A = Instantiate(NodePrefab, new Vector3(2, 0, 0.1f), Quaternion.identity).GetComponent<Node>();
+        Node B = Instantiate(NodePrefab, new Vector3(0.5f, 0, 0.5f), Quaternion.identity).GetComponent<Node>();
+        Node C = Instantiate(NodePrefab, new Vector3(3.5f, 0, 0.5f), Quaternion.identity).GetComponent<Node>();
+        Node D = Instantiate(NodePrefab, new Vector3(1.75f, 0, 0.75f), Quaternion.identity).GetComponent<Node>();
         Node E = Instantiate(NodePrefab, new Vector3(0.5f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("A");
-        Node F = Instantiate(NodePrefab, new Vector3(1.5f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("4");
+        Node F = Instantiate(NodePrefab, new Vector3(1.5f, 0, 1.5f), Quaternion.identity).GetComponent<Node>();
         Node G = Instantiate(NodePrefab, new Vector3(3.25f, 0, 1.5f), Quaternion.identity).GetComponent<Node>().SetLabel("C");
         Node H = Instantiate(NodePrefab, new Vector3(2f, 0, 2.75f), Quaternion.identity).GetComponent<Node>().SetLabel("B");
 
         // Create start
-        Node start = Instantiate(NodePrefab, new Vector3(2, 0, -0.4f), Quaternion.identity).GetComponent<Node>().SetLabel("S");
+        Node start = Instantiate(NodePrefab, new Vector3(2, 0, -0.4f), Quaternion.identity).GetComponent<Node>();
         this.AddNode(start);
 
         // Add to node list
